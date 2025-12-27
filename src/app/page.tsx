@@ -604,11 +604,11 @@ export default function Home() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="text-foreground/90 tracking-wider cursor-default">
-                  <span className="text-emerald-400">Doppel</span>ist
+                  <span className="text-emerald-400">Doppelist</span>
                 </span>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="font-mono text-xs">
-                <p>Ad tag capture toolkit</p>
+                <p>Record. Test. Personalize.</p>
               </TooltipContent>
             </Tooltip>
 
@@ -695,7 +695,7 @@ export default function Home() {
                 <div className="px-3 py-2 border-b border-border bg-foreground/5">
                   <p className="font-medium text-foreground">Doppelist</p>
                   <p className="text-muted-foreground text-[10px] mt-0.5">
-                    MRAID sandbox for ad tag preview & capture
+                    Record. Test. Personalize.
                   </p>
                 </div>
                 <div className="p-1">

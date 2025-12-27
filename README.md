@@ -1,6 +1,6 @@
 # Doppelist
 
-> A professional toolkit for previewing, auditing, and capturing rich media ad creatives.
+> Record. Test. Personalize. A sandbox for rich media ad creatives.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)

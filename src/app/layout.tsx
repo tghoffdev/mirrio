@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Doppelist",
   description:
-    "Capture screenshots and video recordings of MRAID/rich media ad units",
+    "Record, QA, and personalize rich media ad creatives in one sandbox",
   keywords: [
     "MRAID",
     "ad capture",
