@@ -34,6 +34,7 @@ interface PreviewFrameProps {
   /** Show loading indicator for HTML5 content */
   isLoadingHtml5?: boolean;
   backgroundColor?: string;
+  borderColor?: string;
   onReady?: () => void;
   onReload?: () => void;
   onResize?: (width: number, height: number) => void;
@@ -53,7 +54,7 @@ export interface PreviewFrameHandle {
 
 export const PreviewFrame = forwardRef<PreviewFrameHandle, PreviewFrameProps>(
   function PreviewFrame(
-    { width, height, tag, html5Url, isLoadingHtml5 = false, backgroundColor = "#18181b", onReady, onResize, suppressOverflowWarning = false, countdown = null },
+    { width, height, tag, html5Url, isLoadingHtml5 = false, backgroundColor = "#18181b", borderColor = "#27272a", onReady, onResize, suppressOverflowWarning = false, countdown = null },
     ref
   ) {
   const mraid = useMRAID({ width, height });
@@ -236,7 +237,10 @@ export const PreviewFrame = forwardRef<PreviewFrameHandle, PreviewFrameProps>(
       >
         {countdown !== null && <CountdownOverlay />}
         {doesNotFit && !suppressOverflowWarning && <OverflowWarning />}
-        <div className="relative border border-border rounded overflow-hidden bg-white">
+        <div
+          className="relative rounded overflow-hidden bg-white"
+          style={{ border: `1px solid ${borderColor}` }}
+        >
           <iframe
             ref={html5IframeRef}
             src={html5Url}
@@ -271,7 +275,10 @@ export const PreviewFrame = forwardRef<PreviewFrameHandle, PreviewFrameProps>(
       >
         {countdown !== null && <CountdownOverlay />}
         {doesNotFit && !suppressOverflowWarning && <OverflowWarning />}
-        <div className="relative border border-border rounded overflow-hidden bg-white">
+        <div
+          className="relative rounded overflow-hidden bg-white"
+          style={{ border: `1px solid ${borderColor}` }}
+        >
           <CeltraFrame
             width={width}
             height={height}
@@ -306,8 +313,8 @@ export const PreviewFrame = forwardRef<PreviewFrameHandle, PreviewFrameProps>(
       {/* Container for the MRAID iframe */}
       <div
         ref={mraid.containerRef}
-        className="relative border border-border rounded overflow-hidden bg-white"
-        style={{ width, height }}
+        className="relative rounded overflow-hidden bg-white"
+        style={{ width, height, border: `1px solid ${borderColor}` }}
       >
         {/* Show placeholder when no content loaded */}
         {!tag && !html5Url && !mraid.isLoading && !isLoadingHtml5 && (

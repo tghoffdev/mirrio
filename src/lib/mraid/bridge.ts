@@ -173,27 +173,46 @@ export function generateMRAIDBridge(options: MRAIDBridgeOptions): string {
       }
     },
 
+    // Helper to notify parent of MRAID calls
+    _notifyParent: function(type, args) {
+      try {
+        window.parent.postMessage({
+          type: 'mraid-event',
+          event: type,
+          args: args || [],
+          timestamp: Date.now()
+        }, '*');
+      } catch (e) {
+        // Ignore cross-origin errors
+      }
+    },
+
     // Actions
     open: function(url) {
+      mraid._notifyParent('open', [url]);
       if (url) {
         window.open(url, '_blank');
       }
     },
     close: function() {
+      mraid._notifyParent('close');
       // No-op - can't close the preview
     },
     expand: function(url) {
+      mraid._notifyParent('expand', [url]);
       // No-op in mock - would expand the ad
       if (url) {
         window.open(url, '_blank');
       }
     },
     resize: function() {
+      mraid._notifyParent('resize');
       // No-op in mock
     },
 
     // Video (MRAID 3.0)
     playVideo: function(url) {
+      mraid._notifyParent('playVideo', [url]);
       if (url) {
         window.open(url, '_blank');
       }
@@ -201,11 +220,13 @@ export function generateMRAIDBridge(options: MRAIDBridgeOptions): string {
 
     // Store picture
     storePicture: function(url) {
+      mraid._notifyParent('storePicture', [url]);
       // Not supported
     },
 
     // Calendar
     createCalendarEvent: function(params) {
+      mraid._notifyParent('createCalendarEvent', [params]);
       // Not supported
     },
 

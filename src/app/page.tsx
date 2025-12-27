@@ -14,7 +14,7 @@ import { SizeSelector } from "@/components/size-selector";
 import { PreviewFrame, type PreviewFrameHandle } from "@/components/preview-frame";
 import { BackgroundColorPicker } from "@/components/background-color-picker";
 import { CaptureControls } from "@/components/capture-controls";
-import { AuditPanel } from "@/components/audit-panel";
+import { AuditPanel, MRAIDEventCards, type MRAIDEvent } from "@/components/audit-panel";
 import { scanTextElements, type TextElement } from "@/lib/dco/scanner";
 import { detectVendor } from "@/lib/vendors";
 import {
@@ -55,8 +55,12 @@ export default function Home() {
 
   // Preview settings
   const [backgroundColor, setBackgroundColor] = useState("#18181b");
+  const [borderColor, setBorderColor] = useState("#27272a");
   const [recordingMode, setRecordingMode] = useState<RecordingMode>("clip");
   const [outputFormat, setOutputFormat] = useState<OutputFormat>("webm");
+
+  // MRAID events
+  const [mraidEvents, setMraidEvents] = useState<MRAIDEvent[]>([]);
 
   // Processing hook for MP4 conversion
   const processing = useProcessing();
@@ -133,6 +137,32 @@ export default function Home() {
     });
   }, []);
 
+  // Listen for MRAID events from iframe
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === "mraid-event") {
+        const newEvent: MRAIDEvent = {
+          id: `${event.data.timestamp}-${Math.random().toString(36).slice(2)}`,
+          type: event.data.event,
+          args: event.data.args,
+          timestamp: event.data.timestamp,
+        };
+        setMraidEvents((prev) => [...prev.slice(-9), newEvent]);
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+          setMraidEvents((prev) => prev.filter((e) => e.id !== newEvent.id));
+        }, 5000);
+      }
+    };
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
+  // Clear MRAID events when tag changes
+  useEffect(() => {
+    setMraidEvents([]);
+  }, [loadedTag, html5Url]);
+
   // Update service worker config when dimensions change (for HTML5 content)
   useEffect(() => {
     if (html5Url) {
@@ -192,6 +222,14 @@ export default function Home() {
       console.log("[Page] handleLoadTag - tagValue is empty, skipping");
     }
   }, [tagValue, html5Url]);
+
+  // Handle macro replacement - updates tag and reloads
+  const handleMacrosChange = useCallback((modifiedTag: string) => {
+    setTagValue(modifiedTag);
+    setLoadedTag(modifiedTag);
+    setIsAdReady(false);
+    setPreviewKey((k) => k + 1);
+  }, []);
 
   const handleReload = useCallback(() => {
     if (loadedTag || html5Url) {
@@ -575,13 +613,38 @@ export default function Home() {
               {/* Preview Settings */}
               <Card>
                 <CardHeader className="pb-1 pt-2 px-3">
-                  <CardTitle className="text-[10px] font-mono font-normal text-foreground/50 uppercase tracking-widest leading-none">Background</CardTitle>
+                  <CardTitle className="text-[10px] font-mono font-normal text-foreground/50 uppercase tracking-widest leading-none">Display</CardTitle>
                 </CardHeader>
-                <CardContent className="pt-0 px-3 pb-3">
-                  <BackgroundColorPicker
-                    value={backgroundColor}
-                    onChange={setBackgroundColor}
-                  />
+                <CardContent className="pt-0 px-3 pb-3 space-y-3">
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1.5 block">Background</label>
+                    <BackgroundColorPicker
+                      value={backgroundColor}
+                      onChange={setBackgroundColor}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1.5 block">Border</label>
+                    <div className="flex gap-2 items-center">
+                      <div
+                        className="w-8 h-8 rounded border border-border flex-shrink-0"
+                        style={{ backgroundColor: borderColor }}
+                      />
+                      <input
+                        type="text"
+                        value={borderColor}
+                        onChange={(e) => setBorderColor(e.target.value)}
+                        placeholder="#27272a"
+                        className="flex-1 h-8 px-2 font-mono text-sm bg-background border border-input rounded-md"
+                      />
+                      <input
+                        type="color"
+                        value={borderColor}
+                        onChange={(e) => setBorderColor(e.target.value)}
+                        className="w-8 h-8 rounded cursor-pointer border-0 p-0"
+                      />
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -595,6 +658,8 @@ export default function Home() {
               onTextElementsChange={setTextElements}
               onRescan={scanAd}
               isCrossOrigin={isCrossOrigin}
+              mraidEvents={mraidEvents}
+              onMacrosChange={handleMacrosChange}
             />
           </div>
 
@@ -662,11 +727,13 @@ export default function Home() {
                   html5Url={html5Url}
                   isLoadingHtml5={isLoadingHtml5}
                   backgroundColor={backgroundColor}
+                  borderColor={borderColor}
                   onReady={handleAdReady}
                   onResize={handleResize}
                   suppressOverflowWarning={isStartingCapture || recorder.state.isRecording || recorder.state.isProcessing || isCapturing}
                   countdown={countdown}
                 />
+                <MRAIDEventCards events={mraidEvents} />
               </div>
             </CardContent>
           </Card>

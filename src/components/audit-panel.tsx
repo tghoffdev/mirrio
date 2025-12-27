@@ -20,6 +20,20 @@ import {
 } from "@/lib/dco/scanner";
 import { Textarea } from "@/components/ui/textarea";
 
+/** Editable macro with replacement value */
+export interface EditableMacro extends DetectedMacro {
+  /** User-provided replacement value */
+  value: string;
+}
+
+/** MRAID event fired by the ad */
+export interface MRAIDEvent {
+  id: string;
+  type: string;
+  args?: unknown[];
+  timestamp: number;
+}
+
 interface AuditPanelProps {
   tag: string;
   open: boolean;
@@ -32,6 +46,10 @@ interface AuditPanelProps {
   onRescan?: () => void;
   /** Whether current ad is cross-origin (e.g., Celtra preview) */
   isCrossOrigin?: boolean;
+  /** MRAID events fired by the ad */
+  mraidEvents?: MRAIDEvent[];
+  /** Callback when macros are edited - returns modified tag */
+  onMacrosChange?: (modifiedTag: string) => void;
 }
 
 export function AuditPanel({
@@ -42,11 +60,40 @@ export function AuditPanel({
   onTextElementsChange,
   onRescan,
   isCrossOrigin = false,
+  mraidEvents = [],
+  onMacrosChange,
 }: AuditPanelProps) {
-  const macros = useMemo(() => detectMacros(tag), [tag]);
+  // Detect macros and create editable versions
+  const detectedMacros = useMemo(() => detectMacros(tag), [tag]);
+  const [macroValues, setMacroValues] = useState<Record<string, string>>({});
+
   const [activeTab, setActiveTab] = useState<"macros" | "text">("macros");
   const [showExport, setShowExport] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // Reset macro values when tag changes
+  useEffect(() => {
+    setMacroValues({});
+  }, [tag]);
+
+  // Handle macro value change
+  const handleMacroChange = useCallback((macroRaw: string, value: string) => {
+    setMacroValues(prev => ({ ...prev, [macroRaw]: value }));
+  }, []);
+
+  // Apply macro replacements to tag
+  const applyMacros = useCallback(() => {
+    let modifiedTag = tag;
+    for (const [macroRaw, value] of Object.entries(macroValues)) {
+      if (value.trim()) {
+        modifiedTag = modifiedTag.split(macroRaw).join(value);
+      }
+    }
+    onMacrosChange?.(modifiedTag);
+  }, [tag, macroValues, onMacrosChange]);
+
+  // Check if any macros have values
+  const hasMacroValues = Object.values(macroValues).some(v => v.trim());
 
   // Handle text change for a specific element
   const handleTextChange = useCallback(
@@ -97,7 +144,7 @@ export function AuditPanel({
     }
   }, [open]);
 
-  const totalCount = macros.length + textElements.length;
+  const totalCount = detectedMacros.length + textElements.length;
 
   return (
     <div className="relative h-full flex">
@@ -125,9 +172,9 @@ export function AuditPanel({
             <TabsList className="mx-3 mt-2 shrink-0">
               <TabsTrigger value="macros" className="flex-1 text-xs">
                 Macros
-                {macros.length > 0 && (
+                {detectedMacros.length > 0 && (
                   <span className="ml-1.5 text-[10px] bg-foreground/10 px-1.5 py-0.5 rounded">
-                    {macros.length}
+                    {detectedMacros.length}
                   </span>
                 )}
               </TabsTrigger>
@@ -147,7 +194,7 @@ export function AuditPanel({
               className="flex-1 overflow-y-auto px-3 pb-3 mt-0"
             >
               <div className="space-y-1 pt-2">
-                {macros.length === 0 ? (
+                {detectedMacros.length === 0 ? (
                   <div className="text-center py-6 text-foreground/40 text-sm">
                     <p>No macros detected</p>
                     <p className="text-xs mt-2 text-foreground/30">
@@ -156,13 +203,27 @@ export function AuditPanel({
                   </div>
                 ) : (
                   <>
-                    <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-2">
-                      {macros.length} macro{macros.length !== 1 ? "s" : ""} found
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-[10px] text-foreground/40 uppercase tracking-wider">
+                        {detectedMacros.length} macro{detectedMacros.length !== 1 ? "s" : ""} found
+                      </div>
+                      {hasMacroValues && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={applyMacros}
+                          className="h-5 px-2 text-[10px] text-emerald-400 border-emerald-500/50 hover:bg-emerald-500/10"
+                        >
+                          Apply
+                        </Button>
+                      )}
                     </div>
-                    {macros.map((macro) => (
+                    {detectedMacros.map((macro) => (
                       <MacroItem
                         key={`${macro.format}:${macro.name}`}
                         macro={macro}
+                        value={macroValues[macro.raw] || ""}
+                        onChange={(value) => handleMacroChange(macro.raw, value)}
                       />
                     ))}
                   </>
@@ -338,14 +399,25 @@ export function AuditPanel({
   );
 }
 
-function MacroItem({ macro }: { macro: DetectedMacro }) {
+interface MacroItemProps {
+  macro: DetectedMacro;
+  value: string;
+  onChange: (value: string) => void;
+}
+
+function MacroItem({ macro, value, onChange }: MacroItemProps) {
   const description = getMacroDescription(macro.name);
   const formatDisplay = getFormatDisplay(macro.format);
+  const hasValue = value.trim().length > 0;
 
   return (
-    <div className="group p-1.5 rounded hover:bg-foreground/5 transition-colors">
+    <div className="group p-1.5 rounded bg-foreground/5 space-y-1.5">
       <div className="flex items-center justify-between gap-2">
-        <code className="text-xs text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded truncate">
+        <code className={`text-xs px-1.5 py-0.5 rounded truncate ${
+          hasValue
+            ? "text-emerald-400 bg-emerald-500/10"
+            : "text-cyan-400 bg-cyan-500/10"
+        }`}>
           {macro.raw}
         </code>
         <div className="flex items-center gap-1 text-[9px] text-foreground/40 shrink-0">
@@ -360,10 +432,16 @@ function MacroItem({ macro }: { macro: DetectedMacro }) {
         </div>
       </div>
       {description && (
-        <p className="text-[10px] text-foreground/50 mt-0.5 pl-1 truncate">
+        <p className="text-[10px] text-foreground/50 truncate">
           {description}
         </p>
       )}
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Replacement value..."
+        className="h-7 text-xs bg-background/50 border-border/50"
+      />
     </div>
   );
 }
@@ -405,6 +483,32 @@ function TextElementItem({ element, onChange }: TextElementItemProps) {
           Original: {element.originalText}
         </div>
       )}
+    </div>
+  );
+}
+
+/** Event cards component for displaying MRAID calls */
+export function MRAIDEventCards({ events }: { events: MRAIDEvent[] }) {
+  if (events.length === 0) return null;
+
+  return (
+    <div className="fixed bottom-4 left-4 z-50 space-y-2 max-w-xs">
+      {events.slice(-5).map((event) => (
+        <div
+          key={event.id}
+          className="bg-background/95 border border-border rounded-lg px-3 py-2 shadow-lg animate-in slide-in-from-left-2 duration-300"
+        >
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+            <code className="text-xs text-emerald-400">{event.type}</code>
+          </div>
+          {event.args && event.args.length > 0 && (
+            <div className="text-[10px] text-foreground/50 mt-1 truncate">
+              {JSON.stringify(event.args[0])}
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
