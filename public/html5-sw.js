@@ -73,9 +73,9 @@ function generateMRAIDBridge(width, height) {
 
   window.MRAID_ENV = {
     version: '3.0',
-    sdk: 'Einmir Suite',
+    sdk: 'Mirrio Capture',
     sdkVersion: '1.0.0',
-    appId: 'einmir-suite',
+    appId: 'mirrio-capture',
     ifa: '',
     limitAdTracking: true,
     coppa: false

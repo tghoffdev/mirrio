@@ -14,8 +14,7 @@ import { SizeSelector } from "@/components/size-selector";
 import { PreviewFrame, type PreviewFrameHandle } from "@/components/preview-frame";
 import { BackgroundColorPicker } from "@/components/background-color-picker";
 import { CaptureControls } from "@/components/capture-controls";
-import { MacroDrawer, MacroEdgeTab } from "@/components/macro-drawer";
-import { detectMacros } from "@/lib/macros/detector";
+import { AuditPanel } from "@/components/audit-panel";
 import { scanTextElements, type TextElement } from "@/lib/dco/scanner";
 import { detectVendor } from "@/lib/vendors";
 import {
@@ -68,9 +67,8 @@ export default function Home() {
   // Countdown for reload-and-record
   const [countdown, setCountdown] = useState<number | null>(null);
 
-  // Macro drawer + DCO
-  const [macroDrawerOpen, setMacroDrawerOpen] = useState(false);
-  const detectedMacros = useMemo(() => detectMacros(tagValue), [tagValue]);
+  // Audit panel + DCO
+  const [auditPanelOpen, setAuditPanelOpen] = useState(false);
   const [textElements, setTextElements] = useState<TextElement[]>([]);
 
   // Check if current tag is cross-origin (Celtra preview, etc.)
@@ -533,57 +531,71 @@ export default function Home() {
       </header>
 
       <main className="px-2 py-2 flex-1 overflow-hidden">
-        <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-2 h-full">
-          {/* Left Column - Controls */}
-          <div className="space-y-2 overflow-y-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-2 h-full">
+          {/* Left Column - Controls + Audit Panel */}
+          <div className="flex h-full overflow-hidden">
+            {/* Controls */}
+            <div className="w-[380px] shrink-0 space-y-2 overflow-y-auto">
 
-            {/* Tag Input */}
-            <Card>
-              <CardHeader className="pb-1 pt-2 px-3">
-                <CardTitle className="text-[10px] font-mono font-normal text-foreground/50 uppercase tracking-widest leading-none">Ad Content</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0 px-3 pb-3">
-                <TagInput
-                  value={tagValue}
-                  onChange={setTagValue}
-                  onLoad={handleLoadTag}
-                  onHtml5Load={handleHtml5Load}
-                  inputMode={inputMode}
-                  onInputModeChange={setInputMode}
-                  disabled={false}
-                />
-              </CardContent>
-            </Card>
+              {/* Tag Input */}
+              <Card>
+                <CardHeader className="pb-1 pt-2 px-3">
+                  <CardTitle className="text-[10px] font-mono font-normal text-foreground/50 uppercase tracking-widest leading-none">Ad Content</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0 px-3 pb-3">
+                  <TagInput
+                    value={tagValue}
+                    onChange={setTagValue}
+                    onLoad={handleLoadTag}
+                    onHtml5Load={handleHtml5Load}
+                    inputMode={inputMode}
+                    onInputModeChange={setInputMode}
+                    disabled={false}
+                  />
+                </CardContent>
+              </Card>
 
-            {/* Size Controls */}
-            <Card>
-              <CardHeader className="pb-1 pt-2 px-3">
-                <CardTitle className="text-[10px] font-mono font-normal text-foreground/50 uppercase tracking-widest leading-none">Size</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0 px-3 pb-3">
-                <SizeSelector
-                  width={width}
-                  height={height}
-                  onWidthChange={setWidth}
-                  onHeightChange={setHeight}
-                  batchSizes={batchSizes}
-                  onBatchSizesChange={setBatchSizes}
-                />
-              </CardContent>
-            </Card>
+              {/* Size Controls */}
+              <Card>
+                <CardHeader className="pb-1 pt-2 px-3">
+                  <CardTitle className="text-[10px] font-mono font-normal text-foreground/50 uppercase tracking-widest leading-none">Size</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0 px-3 pb-3">
+                  <SizeSelector
+                    width={width}
+                    height={height}
+                    onWidthChange={setWidth}
+                    onHeightChange={setHeight}
+                    batchSizes={batchSizes}
+                    onBatchSizesChange={setBatchSizes}
+                  />
+                </CardContent>
+              </Card>
 
-            {/* Preview Settings */}
-            <Card>
-              <CardHeader className="pb-1 pt-2 px-3">
-                <CardTitle className="text-[10px] font-mono font-normal text-foreground/50 uppercase tracking-widest leading-none">Background</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0 px-3 pb-3">
-                <BackgroundColorPicker
-                  value={backgroundColor}
-                  onChange={setBackgroundColor}
-                />
-              </CardContent>
-            </Card>
+              {/* Preview Settings */}
+              <Card>
+                <CardHeader className="pb-1 pt-2 px-3">
+                  <CardTitle className="text-[10px] font-mono font-normal text-foreground/50 uppercase tracking-widest leading-none">Background</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0 px-3 pb-3">
+                  <BackgroundColorPicker
+                    value={backgroundColor}
+                    onChange={setBackgroundColor}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Audit Panel - slides from right */}
+            <AuditPanel
+              tag={tagValue}
+              open={auditPanelOpen}
+              onOpenChange={setAuditPanelOpen}
+              textElements={textElements}
+              onTextElementsChange={setTextElements}
+              onRescan={scanAd}
+              isCrossOrigin={isCrossOrigin}
+            />
           </div>
 
           {/* Right Column - Preview */}
@@ -661,21 +673,6 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Tag Inspector Tab + Drawer */}
-      <MacroEdgeTab
-        macroCount={detectedMacros.length}
-        textCount={textElements.length}
-        onClick={() => setMacroDrawerOpen(true)}
-      />
-      <MacroDrawer
-        tag={tagValue}
-        open={macroDrawerOpen}
-        onOpenChange={setMacroDrawerOpen}
-        textElements={textElements}
-        onTextElementsChange={setTextElements}
-        onRescan={scanAd}
-        isCrossOrigin={isCrossOrigin}
-      />
     </div>
   );
 }

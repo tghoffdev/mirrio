@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MRAID Capture Tool",
+  title: "Mirrio Capture",
   description:
     "Capture screenshots and video recordings of MRAID/rich media ad units",
   keywords: [
