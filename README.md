@@ -1,16 +1,18 @@
-# Einmir Suite
+# Mirrio Capture
 
 Your rich media ad capture toolkit.
 
-Load MRAID tags and preview URLs from any ad platform. Render at standard or custom sizes. Capture screenshots in batch or record video of animated creatives.
+Load MRAID tags or HTML5 zip bundles. Render at standard or custom sizes. Capture screenshots in batch or record video of animated creatives.
 
 ## Features
 
-- Multi-platform support (Celtra, Google, Flashtalking, Sizmek)
+- MRAID 3.0 mock environment for ad tag preview
+- HTML5 zip upload with service worker rendering
 - IAB size presets with batch screenshot export
 - Video recording with region cropping
-- MRAID 3.0 mock environment
 - Client-side FFmpeg processing
+- DCO text scanning and live editing
+- Macro detection and inspection
 
 ## Getting Started
 
@@ -23,7 +25,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser.
 
 ## Tech Stack
 
-- Next.js 15
+- Next.js 16
 - TypeScript
 - Tailwind CSS
 - FFmpeg WASM

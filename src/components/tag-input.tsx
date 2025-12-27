@@ -8,7 +8,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ZipUpload } from "@/components/zip-upload";
@@ -25,244 +24,29 @@ interface SampleTag {
   tag: string;
 }
 
-interface VendorSamples {
-  vendor: string;
-  color: string;
-  samples: SampleTag[];
-}
-
-// Vendor-organized sample tags
-const VENDOR_SAMPLES: VendorSamples[] = [
+// Sample tags organized by category
+const SAMPLE_TAGS: SampleTag[] = [
   {
-    vendor: "Celtra",
-    color: "text-blue-400",
-    samples: [
-      {
-        label: "Celtra v3",
-        tag: `<script src="mraid.js"></script>
-<div class="celtra-ad-v3">
-    <img src="data:image/png,celtra" style="display: none" onerror="
-        (function(img) {
-            var params = {'accountId':'1d489087','clickUrl':'','clickEvent':'advertiser','externalAdServer':'Custom','tagVersion':'html-standard-9'};
-            var req = document.createElement('script');
-            req.id = params.scriptId = 'celtra-script-' + (window.celtraScriptIndex = (window.celtraScriptIndex||0)+1);
-            params.clientTimestamp = new Date/1000;
-            params.clientTimeZoneOffsetInMinutes = new Date().getTimezoneOffset();
-            params.hostPageLoadId=window.celtraHostPageLoadId=window.celtraHostPageLoadId||(Math.random()+'').slice(2);
-            var qs = '';
-            for (var k in params) {
-                qs += '&amp;' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
-            }
-            var src = 'https://cdn.celtra.com/ads/acf4983a/mraid-ad.js?' + qs;
-            if (src.length >= 8192) {
-                src = 'https://ads.celtra.com/acf4983a/mraid-ad.js?' + qs;
-            }
-            req.src = src;
-            img.parentNode.insertBefore(req, img.nextSibling);
-        })(this);
-    "/>
+    label: "300x250 Banner",
+    tag: `<script src="mraid.js"></script>
+<div style="width:300px;height:250px;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#fff;text-align:center;padding:20px;">
+  <div>
+    <div style="font-size:24px;font-weight:bold;margin-bottom:8px;">Summer Sale</div>
+    <div style="font-size:14px;opacity:0.9;">Up to 50% off everything</div>
+    <div style="margin-top:16px;background:#fff;color:#764ba2;padding:8px 24px;border-radius:4px;font-weight:600;cursor:pointer;">Shop Now</div>
+  </div>
 </div>`,
-      },
-      {
-        label: "Celtra v4",
-        tag: `<div class="celtra-ad-v4">
-    <!-- celtra-tag-payload
-        (function(e){try{
-            var params={'accountId':'1d489087','clickUrl':'','clickEvent':'advertiser','externalAdServer':'Custom','preferredClickThroughWindow':'new','tagVersion':'html-universal-11'};
-            params.hostPageLoadId=window.celtraHostPageLoadId=window.celtraHostPageLoadId||(Math.random()+'').slice(2);var t=params,a=window,n=document,r=n.createElement.bind(document),c=encodeURIComponent,i=e.parentNode,o=e.tagName&&'script'==e.tagName.toLowerCase(),l='celtra-executed',d={urldecode:decodeURIComponent,htmldecode:function(e){var t=r('div');t.innerHTML=e;return t.textContent},eval:eval,raw:function(e){return e}},s=r('script');s.id=t.scriptId='celtra-script-'+(a.celtraScriptIndex=(a.celtraScriptIndex||0)+1);t.clientTimestamp=new Date/1e3;t.clientTimeZoneOffsetInMinutes=(new Date).getTimezoneOffset();if(-1!==i.className.indexOf(l))return;i.className+=' '+l;var v=Object.keys(t).map(function(e){return c(e)+'='+c(t[e])}).join('&');var m='https://cdn.celtra.com/ads/85bdcedb/universal.js'+'?'+v;s.src=m;i.insertBefore(s,e.nextSibling);
-        }catch(e){console.error(e)}})(s); -->
-    <script>
-        var e=document.currentScript;[].slice.call(e.parentNode.childNodes).forEach(function(t){8==t.nodeType&&t.textContent.startsWith(' celtra-tag-payload')&&new Function('s',t.textContent.substring(19))(e)});
-    </script>
-</div>`,
-      },
-    ],
   },
   {
-    vendor: "Google DCM",
-    color: "text-red-400",
-    samples: [
-      {
-        label: "DCM INS Tag",
-        tag: `<ins class='dcmads'
- style='display:inline-block;width:300px;height:250px'
- data-dcm-placement='N123456.123456SITENAME/B12345678.12345678'
- data-dcm-rendering-mode='script'
- data-dcm-https-only>
-  <script src='https://www.googletagservices.com/dcm/dcmads.js'></script>
-  <!-- Fallback content when ad doesn't load -->
-  <div style="width:300px;height:250px;background:linear-gradient(135deg,#ea4335,#fbbc05);display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#fff;text-align:center;padding:20px;">
-    <div>
-      <div style="font-size:24px;font-weight:bold;margin-bottom:8px;">Google DCM</div>
-      <div style="font-size:14px;opacity:0.9;">Sample Ad Placeholder</div>
-      <div style="font-size:11px;opacity:0.7;margin-top:12px;">300×250</div>
-    </div>
-  </div>
-</ins>`,
-      },
-      {
-        label: "DoubleClick Banner",
-        tag: `<div style="width:320px;height:50px;background:linear-gradient(135deg,#4285f4,#34a853);display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#fff;">
-  <span style="font-weight:bold;">Google DoubleClick Banner</span>
-</div>
-<script src="https://googleads.g.doubleclick.net/pagead/ads?client=sample"></script>`,
-      },
-    ],
+    label: "320x50 Banner",
+    tag: `<script src="mraid.js"></script>
+<div style="width:320px;height:50px;background:linear-gradient(135deg,#06b6d4,#0891b2);display:flex;align-items:center;justify-content:center;font-family:sans-serif;">
+  <span style="color:#fff;font-weight:bold;">Limited Time Offer - Click Here</span>
+</div>`,
   },
   {
-    vendor: "Flashtalking",
-    color: "text-purple-400",
-    samples: [
-      {
-        label: "Flashtalking CDN",
-        tag: `<div style="width:300px;height:250px;background:linear-gradient(135deg,#9333ea,#c026d3);display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#fff;text-align:center;padding:20px;">
-  <div>
-    <div style="font-size:24px;font-weight:bold;margin-bottom:8px;">Flashtalking</div>
-    <div style="font-size:14px;opacity:0.9;">Rich Media Ad</div>
-    <div style="font-size:11px;opacity:0.7;margin-top:12px;">300×250</div>
-  </div>
-</div>
-<script src="https://cdn.flashtalking.com/ads/123456/preview.js"></script>`,
-      },
-      {
-        label: "ServedBy Tag",
-        tag: `<div style="width:320px;height:50px;background:linear-gradient(135deg,#7c3aed,#a855f7);display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#fff;">
-  <span style="font-weight:bold;">Flashtalking ServedBy</span>
-</div>
-<script type="text/javascript">
-var ftExpTrack = "";
-var ftClick = "";
-var ftRandom = Math.random()*1000000;
-var ft_flashSrc = "https://servedby.flashtalking.com/imp/1/123456;12345678;501;swf;SampleClient;300x250SampleAd/?cachebuster="+ftRandom;
-</script>`,
-      },
-      {
-        label: "Innovid Tag",
-        tag: `<div style="width:300px;height:250px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#fff;text-align:center;padding:20px;">
-  <div>
-    <div style="font-size:24px;font-weight:bold;margin-bottom:8px;">Innovid</div>
-    <div style="font-size:14px;opacity:0.9;">Video Ad Platform</div>
-    <div style="font-size:11px;opacity:0.7;margin-top:12px;">CTV / Digital</div>
-  </div>
-</div>
-<script src="https://s.innovid.com/1234567890abcdef/12345678/tags.js"></script>`,
-      },
-    ],
-  },
-  {
-    vendor: "Sizmek",
-    color: "text-orange-400",
-    samples: [
-      {
-        label: "Serving-Sys Tag",
-        tag: `<div style="width:300px;height:250px;background:linear-gradient(135deg,#f97316,#fb923c);display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#fff;text-align:center;padding:20px;">
-  <div>
-    <div style="font-size:24px;font-weight:bold;margin-bottom:8px;">Sizmek</div>
-    <div style="font-size:14px;opacity:0.9;">Display Ad</div>
-    <div style="font-size:11px;opacity:0.7;margin-top:12px;">300×250</div>
-  </div>
-</div>
-<script type="text/javascript" src="https://bs.serving-sys.com/Serving/adServer.bs?cn=display&c=23&pli=12345678&adid=123456789"></script>`,
-      },
-      {
-        label: "EBLoader Tag",
-        tag: `<div style="width:320px;height:50px;background:linear-gradient(135deg,#ea580c,#f59e0b);display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#fff;">
-  <span style="font-weight:bold;">Sizmek EBLoader</span>
-</div>
-<script src="https://secure-ds.serving-sys.com/BurstingScript/EBLoader.js" type="text/javascript"></script>
-<script type="text/javascript">
-if (typeof(EB) == 'undefined') {
-  EB = {};
-  EB.registerModule = function() {};
-  EB.addEventListener = function() {};
-}
-</script>`,
-      },
-    ],
-  },
-  {
-    vendor: "Macro Examples",
-    color: "text-cyan-400",
-    samples: [
-      {
-        label: "Click & Cache Macros",
-        tag: `<script src="https://ads.example.com/serve.js?click=[CLICK_URL]&cache=%%CACHEBUSTER%%&ts=[TIMESTAMP]"></script>
-<div style="width:300px;height:250px;background:linear-gradient(135deg,#06b6d4,#0891b2);display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#fff;text-align:center;padding:20px;">
-  <div>
-    <div style="font-size:18px;font-weight:bold;margin-bottom:8px;">Macro Test</div>
-    <div style="font-size:11px;opacity:0.8;font-family:monospace;">[CLICK_URL]</div>
-    <div style="font-size:11px;opacity:0.8;font-family:monospace;">%%CACHEBUSTER%%</div>
-  </div>
-</div>`,
-      },
-      {
-        label: "Geo & Device Macros",
-        tag: `<script>
-var adConfig = {
-  geo: "[GEO_LOCATION]",
-  country: "%%COUNTRY%%",
-  city: "\${CITY}",
-  dma: "{{DMA}}",
-  device: "[DEVICE_ID]",
-  userAgent: "%%USER_AGENT%%"
-};
-</script>
-<div style="width:300px;height:250px;background:linear-gradient(135deg,#14b8a6,#0d9488);display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#fff;text-align:center;padding:20px;">
-  <div>
-    <div style="font-size:18px;font-weight:bold;margin-bottom:8px;">Geo Targeting</div>
-    <div style="font-size:10px;opacity:0.8;font-family:monospace;">[GEO_LOCATION] %%COUNTRY%%</div>
-    <div style="font-size:10px;opacity:0.8;font-family:monospace;">\${CITY} {{DMA}}</div>
-  </div>
-</div>`,
-      },
-      {
-        label: "Programmatic Macros",
-        tag: `<img src="https://pixel.example.com/imp?auction=%%AUCTION_ID%%&price=\${AUCTION_PRICE}&bid=[BID_PRICE]&win=%%WINNING_PRICE%%" width="1" height="1" />
-<script src="https://cdn.example.com/ad.js?placement=[PLACEMENT_ID]&site=%%SITE_ID%%&campaign=\${CAMPAIGN_ID}&creative={{CREATIVE_ID}}&line=[LINE_ITEM_ID]"></script>
-<div style="width:300px;height:250px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#fff;text-align:center;padding:20px;">
-  <div>
-    <div style="font-size:18px;font-weight:bold;margin-bottom:8px;">Programmatic</div>
-    <div style="font-size:10px;opacity:0.8;font-family:monospace;">%%AUCTION_ID%% \${AUCTION_PRICE}</div>
-    <div style="font-size:10px;opacity:0.8;font-family:monospace;">[PLACEMENT_ID] {{CREATIVE_ID}}</div>
-  </div>
-</div>`,
-      },
-      {
-        label: "All Formats",
-        tag: `<!-- Testing all macro formats -->
-<script>
-var macros = {
-  bracket: "[CLICK_URL]",
-  doublePercent: "%%CACHEBUSTER%%",
-  dollarBrace: "\${AUCTION_PRICE}",
-  doubleBrace: "{{CREATIVE_ID}}",
-  doubleBracket: "[[PLACEMENT_ID]]",
-  percentBrace: "%{SITE_ID}",
-  hash: "#RANDOM#",
-  underscore: "__TIMESTAMP__"
-};
-</script>
-<div style="width:300px;height:250px;background:linear-gradient(135deg,#ec4899,#d946ef);display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#fff;text-align:center;padding:20px;">
-  <div>
-    <div style="font-size:18px;font-weight:bold;margin-bottom:8px;">All Formats</div>
-    <div style="font-size:9px;opacity:0.8;font-family:monospace;line-height:1.6;">
-      [BRACKET] %%PERCENT%%<br/>
-      \${DOLLAR} {{BRACE}}<br/>
-      [[DOUBLE]] %{RUBY}<br/>
-      #HASH# __UNDER__
-    </div>
-  </div>
-</div>`,
-      },
-    ],
-  },
-  {
-    vendor: "Generic MRAID",
-    color: "text-gray-400",
-    samples: [
-      {
-        label: "Video Banner",
-        tag: `<script src="mraid.js"></script>
+    label: "Video Banner",
+    tag: `<script src="mraid.js"></script>
 <script>
   var video;
   function mraidReady() {
@@ -292,15 +76,28 @@ var macros = {
   </div>
   <div onclick="closeAd()" style="position:absolute;top:12px;right:12px;width:28px;height:28px;background:rgba(0,0,0,0.5);border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;">✕</div>
 </div>`,
-      },
-      {
-        label: "Simple Banner",
-        tag: `<script src="mraid.js"></script>
-<div style="width:320px;height:50px;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-family:sans-serif;">
-  <span style="color:#fff;font-weight:bold;">Generic MRAID Banner</span>
+  },
+  {
+    label: "With Macros",
+    tag: `<script src="https://ads.example.com/serve.js?click=[CLICK_URL]&cache=%%CACHEBUSTER%%&ts=[TIMESTAMP]"></script>
+<div style="width:300px;height:250px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#fff;text-align:center;padding:20px;">
+  <div>
+    <div style="font-size:24px;font-weight:bold;margin-bottom:8px;">New Collection</div>
+    <div style="font-size:14px;opacity:0.9;">Discover the latest styles</div>
+    <div style="margin-top:16px;background:#fff;color:#7c3aed;padding:8px 24px;border-radius:4px;font-weight:600;cursor:pointer;">Learn More</div>
+  </div>
 </div>`,
-      },
-    ],
+  },
+  {
+    label: "Multi-line Copy",
+    tag: `<script src="mraid.js"></script>
+<div style="width:300px;height:250px;background:linear-gradient(135deg,#f97316,#ea580c);display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#fff;text-align:center;padding:20px;">
+  <div>
+    <div style="font-size:20px;font-weight:bold;margin-bottom:8px;">Free Shipping</div>
+    <div style="font-size:13px;opacity:0.9;line-height:1.4;">On all orders over $50.<br/>Use code SHIP50 at checkout.</div>
+    <div style="margin-top:16px;background:#fff;color:#ea580c;padding:8px 24px;border-radius:4px;font-weight:600;cursor:pointer;">Order Now</div>
+  </div>
+</div>`,
   },
 ];
 
@@ -377,21 +174,16 @@ export function TagInput({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56">
-                {VENDOR_SAMPLES.map((vendorGroup, idx) => (
-                  <div key={vendorGroup.vendor}>
-                    {idx > 0 && <DropdownMenuSeparator />}
-                    <DropdownMenuLabel className={vendorGroup.color}>
-                      {vendorGroup.vendor}
-                    </DropdownMenuLabel>
-                    {vendorGroup.samples.map((sample) => (
-                      <DropdownMenuItem
-                        key={sample.label}
-                        onClick={() => handleSelectTag(sample.tag)}
-                      >
-                        {sample.label}
-                      </DropdownMenuItem>
-                    ))}
-                  </div>
+                <DropdownMenuLabel className="text-foreground/50">
+                  Sample Tags
+                </DropdownMenuLabel>
+                {SAMPLE_TAGS.map((sample) => (
+                  <DropdownMenuItem
+                    key={sample.label}
+                    onClick={() => handleSelectTag(sample.tag)}
+                  >
+                    {sample.label}
+                  </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>

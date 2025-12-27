@@ -437,9 +437,7 @@ export default function Home() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="text-foreground/90 tracking-wider cursor-default">
-                  <span className="text-emerald-400">Einmir</span>
-                  <span className="text-foreground/40 mx-1">/</span>
-                  <span className="text-foreground/70">Capture</span>
+                  <span className="text-emerald-400">Mirrio</span> Capture
                 </span>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="font-mono text-xs">
