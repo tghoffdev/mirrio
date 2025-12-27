@@ -34,6 +34,8 @@ interface MacroDrawerProps {
   onTextElementsChange?: (elements: TextElement[]) => void;
   /** DCO: Trigger a rescan */
   onRescan?: () => void;
+  /** Whether current ad is cross-origin (e.g., Celtra preview) */
+  isCrossOrigin?: boolean;
 }
 
 export function MacroDrawer({
@@ -43,6 +45,7 @@ export function MacroDrawer({
   textElements = [],
   onTextElementsChange,
   onRescan,
+  isCrossOrigin = false,
 }: MacroDrawerProps) {
   const macros = useMemo(() => detectMacros(tag), [tag]);
   const [activeTab, setActiveTab] = useState<"macros" | "text">("macros");
@@ -139,7 +142,14 @@ export function MacroDrawer({
             className="flex-1 overflow-y-auto px-4 pb-4 mt-0"
           >
             <div className="space-y-3 pt-3">
-              {textElements.length === 0 ? (
+              {isCrossOrigin ? (
+                <div className="text-center py-8 text-foreground/40 text-sm">
+                  <p>Text editing unavailable</p>
+                  <p className="text-xs mt-2 text-foreground/30">
+                    External preview URLs (Celtra, etc.) are cross-origin and cannot be scanned.
+                  </p>
+                </div>
+              ) : textElements.length === 0 ? (
                 <div className="text-center py-8 text-foreground/40 text-sm">
                   <p>No text elements found</p>
                   <p className="text-xs mt-2 text-foreground/30">

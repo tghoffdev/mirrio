@@ -17,6 +17,7 @@ import { CaptureControls } from "@/components/capture-controls";
 import { MacroDrawer, MacroEdgeTab } from "@/components/macro-drawer";
 import { detectMacros } from "@/lib/macros/detector";
 import { scanTextElements, type TextElement } from "@/lib/dco/scanner";
+import { detectVendor } from "@/lib/vendors";
 import {
   useRecorder,
   downloadVideo,
@@ -71,6 +72,14 @@ export default function Home() {
   const [macroDrawerOpen, setMacroDrawerOpen] = useState(false);
   const detectedMacros = useMemo(() => detectMacros(tagValue), [tagValue]);
   const [textElements, setTextElements] = useState<TextElement[]>([]);
+
+  // Check if current tag is cross-origin (Celtra preview, etc.)
+  const isCrossOrigin = useMemo(() => {
+    if (!loadedTag) return false;
+    const vendorInfo = detectVendor(loadedTag);
+    // Celtra with preview URL loads external content
+    return vendorInfo.platform === "celtra" && !!vendorInfo.previewUrl;
+  }, [loadedTag]);
 
   // Ref for the preview frame (used for clip recording mode and DCO scanning)
   const previewFrameRef = useRef<PreviewFrameHandle>(null);
@@ -667,6 +676,7 @@ export default function Home() {
         textElements={textElements}
         onTextElementsChange={setTextElements}
         onRescan={scanAd}
+        isCrossOrigin={isCrossOrigin}
       />
     </div>
   );
