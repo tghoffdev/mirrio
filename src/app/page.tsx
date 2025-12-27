@@ -21,6 +21,7 @@ import { BackgroundColorPicker } from "@/components/background-color-picker";
 import { CaptureControls } from "@/components/capture-controls";
 import { AuditPanel, type MRAIDEvent } from "@/components/audit-panel";
 import { scanTextElements, type TextElement } from "@/lib/dco/scanner";
+import { detectMacros } from "@/lib/macros/detector";
 import { detectVendor } from "@/lib/vendors";
 import {
   useRecorder,
@@ -171,6 +172,15 @@ export default function Home() {
   useEffect(() => {
     setMraidEvents([]);
   }, [loadedTag, html5Url]);
+
+  // Auto-open audit panel when macros are detected or text elements exist
+  useEffect(() => {
+    const hasMacros = loadedTag ? detectMacros(loadedTag).length > 0 : false;
+    const hasTextElements = textElements.length > 0;
+    if (hasMacros || hasTextElements) {
+      setAuditPanelOpen(true);
+    }
+  }, [loadedTag, textElements]);
 
   // Update service worker config when dimensions change (for HTML5 content)
   useEffect(() => {
