@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import {
   Sheet,
   SheetContent,
@@ -22,7 +22,9 @@ import {
   getTypeColor,
   updateTextElement,
   resetAllTextElements,
+  generateModifiedTag,
 } from "@/lib/dco/scanner";
+import { Textarea } from "@/components/ui/textarea";
 
 interface MacroDrawerProps {
   tag: string;
@@ -49,6 +51,8 @@ export function MacroDrawer({
 }: MacroDrawerProps) {
   const macros = useMemo(() => detectMacros(tag), [tag]);
   const [activeTab, setActiveTab] = useState<"macros" | "text">("macros");
+  const [showExport, setShowExport] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Handle text change for a specific element
   const handleTextChange = useCallback(
@@ -73,6 +77,32 @@ export function MacroDrawer({
   const hasModifications = textElements.some(
     (el) => el.currentText !== el.originalText
   );
+
+  // Generate modified tag when showing export
+  const exportResult = useMemo(() => {
+    if (!showExport || !hasModifications) return null;
+    return generateModifiedTag(tag, textElements);
+  }, [showExport, hasModifications, tag, textElements]);
+
+  // Copy to clipboard
+  const handleCopy = useCallback(async () => {
+    if (!exportResult) return;
+    try {
+      await navigator.clipboard.writeText(exportResult.tag);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  }, [exportResult]);
+
+  // Reset export view when drawer closes
+  useEffect(() => {
+    if (!open) {
+      setShowExport(false);
+      setCopied(false);
+    }
+  }, [open]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -196,6 +226,67 @@ export function MacroDrawer({
                       )}
                     </div>
                   </div>
+
+                  {/* Export Section */}
+                  {hasModifications && (
+                    <div className="border border-border/50 rounded p-3 bg-foreground/5">
+                      {!showExport ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowExport(true)}
+                          className="w-full text-xs"
+                        >
+                          Generate Modified Tag
+                        </Button>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] text-foreground/50 uppercase tracking-wider">
+                              Modified Tag
+                            </span>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowExport(false)}
+                                className="h-6 px-2 text-[10px]"
+                              >
+                                Close
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleCopy}
+                                className="h-6 px-2 text-[10px]"
+                              >
+                                {copied ? "Copied!" : "Copy"}
+                              </Button>
+                            </div>
+                          </div>
+
+                          {(exportResult?.warnings?.length ?? 0) > 0 && exportResult && (
+                            <div className="text-[10px] text-amber-400 space-y-1">
+                              {exportResult.warnings.map((w, i) => (
+                                <div key={i}>⚠ {w}</div>
+                              ))}
+                            </div>
+                          )}
+
+                          <Textarea
+                            value={exportResult?.tag ?? ""}
+                            readOnly
+                            className="h-32 text-[11px] font-mono bg-background/50 resize-none"
+                          />
+
+                          <div className="text-[10px] text-foreground/40">
+                            {exportResult?.replacements ?? 0} replacement
+                            {(exportResult?.replacements ?? 0) !== 1 ? "s" : ""} made
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {textElements.map((element) => (
                     <TextElementItem

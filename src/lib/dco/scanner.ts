@@ -216,3 +216,68 @@ export function getTypeColor(type: TextType): string {
   };
   return colors[type];
 }
+
+export interface TagGenerationResult {
+  /** The modified tag string */
+  tag: string;
+  /** Number of replacements made */
+  replacements: number;
+  /** Warnings (e.g., ambiguous replacements) */
+  warnings: string[];
+}
+
+/**
+ * Generate a modified tag by replacing original text with current text
+ */
+export function generateModifiedTag(
+  originalTag: string,
+  elements: TextElement[]
+): TagGenerationResult {
+  let tag = originalTag;
+  let replacements = 0;
+  const warnings: string[] = [];
+
+  // Only process modified elements
+  const modified = elements.filter((el) => el.currentText !== el.originalText);
+
+  for (const element of modified) {
+    const { originalText, currentText } = element;
+
+    // Count occurrences of original text
+    const regex = new RegExp(escapeRegex(originalText), "g");
+    const matches = tag.match(regex);
+    const count = matches?.length ?? 0;
+
+    if (count === 0) {
+      warnings.push(`"${truncate(originalText, 30)}" not found in tag`);
+    } else if (count > 1) {
+      // Replace all occurrences but warn
+      tag = tag.replace(regex, currentText);
+      replacements += count;
+      warnings.push(
+        `"${truncate(originalText, 30)}" appeared ${count}x - all replaced`
+      );
+    } else {
+      // Exactly one match - safe to replace
+      tag = tag.replace(originalText, currentText);
+      replacements++;
+    }
+  }
+
+  return { tag, replacements, warnings };
+}
+
+/**
+ * Escape special regex characters
+ */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Truncate string with ellipsis
+ */
+function truncate(str: string, maxLen: number): string {
+  if (str.length <= maxLen) return str;
+  return str.slice(0, maxLen - 1) + "…";
+}
