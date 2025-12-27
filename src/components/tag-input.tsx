@@ -29,18 +29,24 @@ const SAMPLE_TAGS: SampleTag[] = [
   {
     label: "300x250 Banner",
     tag: `<script src="mraid.js"></script>
-<div style="width:300px;height:250px;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#fff;text-align:center;padding:20px;">
+<script>
+  function handleClick() { mraid.open('https://example.com/summer-sale'); }
+</script>
+<div onclick="handleClick()" style="width:300px;height:250px;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#fff;text-align:center;padding:20px;cursor:pointer;">
   <div>
     <div style="font-size:24px;font-weight:bold;margin-bottom:8px;">Summer Sale</div>
     <div style="font-size:14px;opacity:0.9;">Up to 50% off everything</div>
-    <div style="margin-top:16px;background:#fff;color:#764ba2;padding:8px 24px;border-radius:4px;font-weight:600;cursor:pointer;">Shop Now</div>
+    <div style="margin-top:16px;background:#fff;color:#764ba2;padding:8px 24px;border-radius:4px;font-weight:600;">Shop Now</div>
   </div>
 </div>`,
   },
   {
     label: "320x50 Banner",
     tag: `<script src="mraid.js"></script>
-<div style="width:320px;height:50px;background:linear-gradient(135deg,#06b6d4,#0891b2);display:flex;align-items:center;justify-content:center;font-family:sans-serif;">
+<script>
+  function handleClick() { mraid.open('https://example.com/offer'); }
+</script>
+<div onclick="handleClick()" style="width:320px;height:50px;background:linear-gradient(135deg,#06b6d4,#0891b2);display:flex;align-items:center;justify-content:center;font-family:sans-serif;cursor:pointer;">
   <span style="color:#fff;font-weight:bold;">Limited Time Offer - Click Here</span>
 </div>`,
   },
@@ -79,23 +85,29 @@ const SAMPLE_TAGS: SampleTag[] = [
   },
   {
     label: "With Macros",
-    tag: `<script src="https://ads.example.com/serve.js?click=[CLICK_URL]&cache=%%CACHEBUSTER%%&ts=[TIMESTAMP]"></script>
-<div style="width:300px;height:250px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#fff;text-align:center;padding:20px;">
+    tag: `<script src="mraid.js"></script>
+<script>
+  function handleClick() { mraid.open('[CLICK_URL]'); }
+</script>
+<div onclick="handleClick()" style="width:300px;height:250px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#fff;text-align:center;padding:20px;cursor:pointer;">
   <div>
     <div style="font-size:24px;font-weight:bold;margin-bottom:8px;">New Collection</div>
     <div style="font-size:14px;opacity:0.9;">Discover the latest styles</div>
-    <div style="margin-top:16px;background:#fff;color:#7c3aed;padding:8px 24px;border-radius:4px;font-weight:600;cursor:pointer;">Learn More</div>
+    <div style="margin-top:16px;background:#fff;color:#7c3aed;padding:8px 24px;border-radius:4px;font-weight:600;">Learn More</div>
   </div>
 </div>`,
   },
   {
     label: "Multi-line Copy",
     tag: `<script src="mraid.js"></script>
-<div style="width:300px;height:250px;background:linear-gradient(135deg,#f97316,#ea580c);display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#fff;text-align:center;padding:20px;">
+<script>
+  function handleClick() { mraid.open('https://example.com/shipping'); }
+</script>
+<div onclick="handleClick()" style="width:300px;height:250px;background:linear-gradient(135deg,#f97316,#ea580c);display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#fff;text-align:center;padding:20px;cursor:pointer;">
   <div>
     <div style="font-size:20px;font-weight:bold;margin-bottom:8px;">Free Shipping</div>
     <div style="font-size:13px;opacity:0.9;line-height:1.4;">On all orders over $50.<br/>Use code SHIP50 at checkout.</div>
-    <div style="margin-top:16px;background:#fff;color:#ea580c;padding:8px 24px;border-radius:4px;font-weight:600;cursor:pointer;">Order Now</div>
+    <div style="margin-top:16px;background:#fff;color:#ea580c;padding:8px 24px;border-radius:4px;font-weight:600;">Order Now</div>
   </div>
 </div>`,
   },
