@@ -76,7 +76,7 @@ export function SizeSelector({
     setHeightStr(String(height));
   }, [height]);
 
-  const handleWidthBlur = () => {
+  const handleWidthSubmit = () => {
     const val = parseInt(widthStr, 10);
     if (!isNaN(val) && val >= 50 && val <= 2000) {
       onWidthChange(val);
@@ -86,13 +86,21 @@ export function SizeSelector({
     }
   };
 
-  const handleHeightBlur = () => {
+  const handleHeightSubmit = () => {
     const val = parseInt(heightStr, 10);
     if (!isNaN(val) && val >= 50 && val <= 2000) {
       onHeightChange(val);
     } else {
       // Reset to current valid value
       setHeightStr(String(height));
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, submitFn: () => void) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      submitFn();
+      (e.target as HTMLInputElement).blur();
     }
   };
 
@@ -148,7 +156,8 @@ export function SizeSelector({
             type="number"
             value={widthStr}
             onChange={(e) => setWidthStr(e.target.value)}
-            onBlur={handleWidthBlur}
+            onBlur={handleWidthSubmit}
+            onKeyDown={(e) => handleKeyDown(e, handleWidthSubmit)}
             className="w-20"
             min={50}
             max={2000}
@@ -164,7 +173,8 @@ export function SizeSelector({
             type="number"
             value={heightStr}
             onChange={(e) => setHeightStr(e.target.value)}
-            onBlur={handleHeightBlur}
+            onBlur={handleHeightSubmit}
+            onKeyDown={(e) => handleKeyDown(e, handleHeightSubmit)}
             className="w-20"
             min={50}
             max={2000}
