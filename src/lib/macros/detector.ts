@@ -226,21 +226,42 @@ export function getFormatDisplay(format: MacroFormat): string {
 }
 
 /**
- * Scan HTML5 iframe content for macros
- * This extracts all HTML and inline JS to detect bundle-level macros
+ * Scan HTML5 iframe content for macros (async to fetch external scripts)
+ * This extracts all HTML, inline JS, and external JS to detect bundle-level macros
  */
-export function scanIframeForMacros(iframe: HTMLIFrameElement): DetectedMacro[] {
+export async function scanIframeForMacros(iframe: HTMLIFrameElement): Promise<DetectedMacro[]> {
   try {
     const doc = iframe.contentDocument;
-    if (!doc) return [];
+    const win = iframe.contentWindow;
+    if (!doc || !win) return [];
 
-    // Get all content: HTML + all script contents
+    // Get HTML content
     const html = doc.documentElement?.outerHTML || "";
-    const scripts = Array.from(doc.querySelectorAll("script"))
-      .map(s => s.textContent || "")
-      .join("\n");
 
-    const content = html + "\n" + scripts;
+    // Get inline script contents
+    const scripts = doc.querySelectorAll("script");
+    const scriptContents: string[] = [];
+
+    for (const script of Array.from(scripts)) {
+      if (script.src) {
+        // External script - fetch it
+        try {
+          const response = await fetch(script.src);
+          if (response.ok) {
+            const text = await response.text();
+            scriptContents.push(text);
+          }
+        } catch (e) {
+          console.warn("[MacroDetector] Failed to fetch script:", script.src, e);
+        }
+      } else if (script.textContent) {
+        // Inline script
+        scriptContents.push(script.textContent);
+      }
+    }
+
+    const content = html + "\n" + scriptContents.join("\n");
+    console.log("[MacroDetector] Scanned content length:", content.length);
     return detectMacros(content);
   } catch (e) {
     console.warn("[MacroDetector] Failed to scan iframe:", e);

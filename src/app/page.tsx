@@ -307,12 +307,12 @@ export default function Home() {
     const iframe = previewFrameRef.current?.getIframe();
     if (iframe) {
       // Delay slightly to ensure ad has fully rendered
-      setTimeout(() => {
+      setTimeout(async () => {
         let elements = scanTextElements(iframe);
         console.log("[DCO] Scanned", elements.length, "text elements");
 
-        // Scan for HTML5 macros in iframe content
-        const macros = scanIframeForMacros(iframe);
+        // Scan for HTML5 macros in iframe content (async - fetches external scripts)
+        const macros = await scanIframeForMacros(iframe);
         console.log("[Macros] Scanned", macros.length, "macros from iframe");
         setHtml5Macros(macros);
 
