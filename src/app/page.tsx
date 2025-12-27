@@ -14,7 +14,7 @@ import { SizeSelector } from "@/components/size-selector";
 import { PreviewFrame } from "@/components/preview-frame";
 import { BackgroundColorPicker } from "@/components/background-color-picker";
 import { CaptureControls } from "@/components/capture-controls";
-import { MacroDrawer, MacroTriggerButton } from "@/components/macro-drawer";
+import { MacroDrawer, MacroEdgeTab } from "@/components/macro-drawer";
 import { detectMacros } from "@/lib/macros/detector";
 import {
   useRecorder,
@@ -490,19 +490,6 @@ export default function Home() {
                 </TooltipContent>
               </Tooltip>
 
-              <span className="text-foreground/20 mx-1">|</span>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <MacroTriggerButton
-                    macroCount={detectedMacros.length}
-                    onClick={() => setMacroDrawerOpen(true)}
-                  />
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="font-mono text-xs">
-                  <p>Detected macros</p>
-                </TooltipContent>
-              </Tooltip>
             </div>
 
             <Tooltip>
@@ -649,7 +636,11 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Macro Detection Drawer */}
+      {/* Macro Detection Tab + Drawer */}
+      <MacroEdgeTab
+        macroCount={detectedMacros.length}
+        onClick={() => setMacroDrawerOpen(true)}
+      />
       <MacroDrawer
         tag={tagValue}
         open={macroDrawerOpen}

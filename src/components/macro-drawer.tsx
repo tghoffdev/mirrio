@@ -87,25 +87,26 @@ function MacroItem({ macro }: { macro: DetectedMacro }) {
   );
 }
 
-interface MacroTriggerButtonProps {
+interface MacroEdgeTabProps {
   macroCount: number;
   onClick: () => void;
 }
 
-export function MacroTriggerButton({ macroCount, onClick }: MacroTriggerButtonProps) {
+export function MacroEdgeTab({ macroCount, onClick }: MacroEdgeTabProps) {
   return (
     <button
       onClick={onClick}
-      className="p-1 text-foreground/40 hover:text-foreground/80 hover:bg-foreground/10 rounded transition-colors flex items-center gap-1"
+      className="fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-background border border-r-0 border-border rounded-l px-1.5 py-3 hover:bg-foreground/5 transition-colors group"
+      style={{ writingMode: "vertical-rl" }}
     >
-      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-      </svg>
-      {macroCount > 0 && (
-        <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1 rounded">
-          {macroCount}
-        </span>
-      )}
+      <span className="text-[10px] font-mono uppercase tracking-widest text-foreground/50 group-hover:text-foreground/80 transition-colors flex items-center gap-2">
+        <span>Macros</span>
+        {macroCount > 0 && (
+          <span className="bg-foreground/10 text-foreground/70 px-1 py-0.5 rounded text-[9px]">
+            {macroCount}
+          </span>
+        )}
+      </span>
     </button>
   );
 }
