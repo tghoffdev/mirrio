@@ -685,6 +685,53 @@ export default function Home() {
 
             <span className="text-foreground/20">|</span>
 
+            {/* Compliance Popover */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <span className="text-foreground/30 hover:text-foreground/50 cursor-pointer transition-colors text-[10px]">
+                  [legal]
+                </span>
+              </PopoverTrigger>
+              <PopoverContent side="bottom" align="end" className="w-80 font-mono text-xs p-0 overflow-hidden">
+                <div className="px-3 py-2 border-b border-border bg-foreground/5">
+                  <p className="font-medium text-foreground flex items-center gap-2">
+                    <span className="text-emerald-400">$</span> compliance --status
+                  </p>
+                </div>
+                <div className="p-3 space-y-3 text-[11px]">
+                  <div>
+                    <p className="text-emerald-400 mb-1">{">"} Data Processing</p>
+                    <p className="text-foreground/60 leading-relaxed">
+                      All rendering, capture, and personalization happens client-side in your browser.
+                      Ad content never touches our servers.
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-emerald-400 mb-1">{">"} Analytics</p>
+                    <p className="text-foreground/60 leading-relaxed">
+                      We use Google Analytics and Vercel Analytics to understand usage patterns.
+                      No ad content or personal data is collected.
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-emerald-400 mb-1">{">"} Cookies</p>
+                    <p className="text-foreground/60 leading-relaxed">
+                      Only essential cookies for analytics. No tracking across sites.
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-emerald-400 mb-1">{">"} Your Content</p>
+                    <p className="text-foreground/60 leading-relaxed">
+                      Tags, zips, and captures stay in your browser. Clear your tab, clear your data.
+                    </p>
+                  </div>
+                </div>
+                <div className="px-3 py-2 border-t border-border bg-foreground/5 text-[10px] text-foreground/40">
+                  <span className="text-emerald-400/60">exit 0</span> · No data retained server-side
+                </div>
+              </PopoverContent>
+            </Popover>
+
             <Popover onOpenChange={(open) => !open && setHighlightedSection(null)}>
               <PopoverTrigger asChild>
                 <span className="text-foreground/40 hover:text-foreground/70 cursor-help transition-colors">
