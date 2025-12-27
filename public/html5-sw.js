@@ -73,9 +73,9 @@ function generateMRAIDBridge(width, height) {
 
   window.MRAID_ENV = {
     version: '3.0',
-    sdk: 'Mirrio Capture',
+    sdk: 'Doppelist',
     sdkVersion: '1.0.0',
-    appId: 'mirrio-capture',
+    appId: 'doppelist',
     ifa: '',
     limitAdTracking: true,
     coppa: false

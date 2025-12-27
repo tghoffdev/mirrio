@@ -604,7 +604,7 @@ export default function Home() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="text-foreground/90 tracking-wider cursor-default">
-                  <span className="text-emerald-400">Mirrio</span> Capture
+                  <span className="text-emerald-400">Doppel</span>ist
                 </span>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="font-mono text-xs">
@@ -693,7 +693,7 @@ export default function Home() {
               </PopoverTrigger>
               <PopoverContent side="bottom" align="end" className="w-72 font-mono text-xs p-0 overflow-hidden">
                 <div className="px-3 py-2 border-b border-border bg-foreground/5">
-                  <p className="font-medium text-foreground">Mirrio Capture</p>
+                  <p className="font-medium text-foreground">Doppelist</p>
                   <p className="text-muted-foreground text-[10px] mt-0.5">
                     MRAID sandbox for ad tag preview & capture
                   </p>

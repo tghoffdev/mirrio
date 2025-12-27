@@ -1,4 +1,4 @@
-# Mirrio Capture
+# Doppelist
 
 > A professional toolkit for previewing, auditing, and capturing rich media ad creatives.
 
@@ -10,7 +10,7 @@
 
 ## Overview
 
-Mirrio Capture streamlines the QA and asset capture workflow for digital advertising. Load MRAID tags or HTML5 zip bundles, preview at any size, inspect macros and events, edit DCO text live, and export screenshots or video recordings—all client-side.
+Doppelist streamlines the QA and asset capture workflow for digital advertising. Load MRAID tags or HTML5 zip bundles, preview at any size, inspect macros and events, edit DCO text live, and export screenshots or video recordings—all client-side.
 
 ## Features
 

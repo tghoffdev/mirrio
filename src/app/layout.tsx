@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mirrio Capture",
+  title: "Doppelist",
   description:
     "Capture screenshots and video recordings of MRAID/rich media ad units",
   keywords: [
