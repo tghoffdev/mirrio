@@ -31,6 +31,16 @@ export function createMRAIDContainer(
 ): MRAIDContainerInstance {
   const { width, height, placementType = "inline", onReady, onError } = options;
 
+  console.log("[MRAID Container] Creating container", {
+    targetId: target.id,
+    targetClass: target.className,
+    tagLength: tag.length,
+    tagPreview: tag.substring(0, 150) + "...",
+    width,
+    height,
+    placementType,
+  });
+
   // Create iframe
   const iframe = document.createElement("iframe");
 
@@ -140,10 +150,15 @@ export function createMRAIDContainer(
 </body>
 </html>`;
 
+  console.log("[MRAID Container] Setting srcdoc", {
+    srcdocLength: srcdoc.length,
+    containsTag: srcdoc.includes(tag.substring(0, 50)),
+  });
   iframe.srcdoc = srcdoc;
 
   // Handle load event
   iframe.onload = () => {
+    console.log("[MRAID Container] iframe onload fired");
     try {
       onReady?.();
     } catch (e) {
@@ -159,7 +174,9 @@ export function createMRAIDContainer(
   };
 
   // Append to target
+  console.log("[MRAID Container] Appending iframe to target");
   target.appendChild(iframe);
+  console.log("[MRAID Container] Iframe appended, waiting for load...");
 
   return {
     iframe,

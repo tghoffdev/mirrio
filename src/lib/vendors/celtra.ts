@@ -5,16 +5,19 @@
  * instead of trying to render raw MRAID tags.
  */
 
-export interface CeltraDetectionResult {
-  isCeltra: boolean;
-  adId?: string;
-  previewUrl?: string;
+import type { VendorDetector, VendorDetectionResult } from "@/types";
+
+/**
+ * Builds a Celtra preview sandbox URL from an ad ID
+ */
+export function buildCeltraPreviewUrl(adId: string): string {
+  return `https://preview-sandbox.celtra.com/preview/${adId}/frame`;
 }
 
 /**
- * Detects if a tag is a Celtra tag and extracts the ad ID
+ * Detects if a tag is a Celtra tag
  */
-export function detectCeltra(tag: string): CeltraDetectionResult {
+function detect(tag: string): VendorDetectionResult | null {
   // Check for Celtra CDN patterns
   const celtraPatterns = [
     /cdn\.celtra\.com\/ads\/([a-f0-9]+)\//i,
@@ -26,9 +29,10 @@ export function detectCeltra(tag: string): CeltraDetectionResult {
     if (match && match[1]) {
       const adId = match[1];
       return {
-        isCeltra: true,
-        adId,
+        platform: "celtra",
+        tag,
         previewUrl: buildCeltraPreviewUrl(adId),
+        metadata: { adId },
       };
     }
   }
@@ -39,25 +43,45 @@ export function detectCeltra(tag: string): CeltraDetectionResult {
     const hexIdMatch = tag.match(/\/([a-f0-9]{8})\//i);
     if (hexIdMatch && hexIdMatch[1]) {
       return {
-        isCeltra: true,
-        adId: hexIdMatch[1],
+        platform: "celtra",
+        tag,
         previewUrl: buildCeltraPreviewUrl(hexIdMatch[1]),
+        metadata: { adId: hexIdMatch[1] },
       };
     }
 
+    // No ad ID found, but it's still Celtra
     return {
-      isCeltra: true,
-      // No ad ID found, but it's still Celtra
+      platform: "celtra",
+      tag,
     };
   }
 
-  return { isCeltra: false };
+  return null;
 }
 
-/**
- * Builds a Celtra preview sandbox URL from an ad ID
- */
-export function buildCeltraPreviewUrl(adId: string): string {
-  // Use the generic Celtra preview sandbox
-  return `https://preview-sandbox.celtra.com/preview/${adId}/frame`;
+export const celtraDetector: VendorDetector = {
+  name: "celtra",
+  displayName: "Celtra",
+  detect,
+  requiresSpecialRendering: true,
+};
+
+// Legacy export for backwards compatibility
+export interface CeltraDetectionResult {
+  isCeltra: boolean;
+  adId?: string;
+  previewUrl?: string;
+}
+
+export function detectCeltra(tag: string): CeltraDetectionResult {
+  const result = detect(tag);
+  if (result) {
+    return {
+      isCeltra: true,
+      adId: result.metadata?.adId,
+      previewUrl: result.previewUrl,
+    };
+  }
+  return { isCeltra: false };
 }

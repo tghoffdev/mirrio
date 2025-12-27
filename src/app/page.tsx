@@ -3,6 +3,12 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { TagInput, type InputMode } from "@/components/tag-input";
 import { SizeSelector } from "@/components/size-selector";
 import { PreviewFrame } from "@/components/preview-frame";
@@ -156,6 +162,11 @@ export default function Home() {
   );
 
   const handleLoadTag = useCallback(() => {
+    console.log("[Page] handleLoadTag called", {
+      tagValueLength: tagValue.length,
+      tagValueTrimmed: tagValue.trim().length,
+      hasHtml5Url: !!html5Url,
+    });
     if (tagValue.trim()) {
       // Clear HTML5 content when loading a tag
       if (html5Url) {
@@ -163,9 +174,12 @@ export default function Home() {
         setHtml5Url(null);
         setHtml5EntryPoint(null);
       }
+      console.log("[Page] Setting loadedTag:", tagValue.trim().substring(0, 100) + "...");
       setLoadedTag(tagValue.trim());
       setIsAdReady(false);
       setPreviewKey((k) => k + 1);
+    } else {
+      console.log("[Page] handleLoadTag - tagValue is empty, skipping");
     }
   }, [tagValue, html5Url]);
 
@@ -469,20 +483,130 @@ export default function Home() {
   }, [interactiveMode]);
 
   return (
-    <div className="h-screen bg-background overflow-hidden">
-      <main className="container mx-auto px-4 py-4 h-full">
-        <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-4 h-full">
+    <div className="h-screen bg-background overflow-hidden flex flex-col">
+      {/* ASCII Header */}
+      <header className="w-full border-b border-border/50 bg-black/20 backdrop-blur-sm">
+        <TooltipProvider delayDuration={200}>
+          <div className="px-4 py-1.5 font-mono text-xs flex items-center gap-3">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="text-emerald-500/80 cursor-default">{">"}_</span>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="font-mono text-xs">
+                <p>Terminal ready</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="text-foreground/90 tracking-wider cursor-default">
+                  <span className="text-emerald-400">Einmir</span>
+                  <span className="text-foreground/40 mx-1">/</span>
+                  <span className="text-foreground/70">Capture</span>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="font-mono text-xs">
+                <p>Ad tag capture toolkit</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <span className="text-foreground/20 hidden sm:inline">{"///"}</span>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="text-foreground/30 hidden sm:inline text-[10px] cursor-default">v0.1.0</span>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="font-mono text-xs">
+                <p>Build: tags branch</p>
+                <p className="text-muted-foreground">Multi-vendor detection</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <div className="flex-1" />
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={handleReload}
+                    disabled={!loadedTag && !html5Url}
+                    className="p-1 text-foreground/40 hover:text-foreground/80 hover:bg-foreground/10 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="font-mono text-xs">
+                  <p>Reload ad</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={handleClear}
+                    disabled={!loadedTag && !html5Url}
+                    className="p-1 text-foreground/40 hover:text-foreground/80 hover:bg-foreground/10 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="font-mono text-xs">
+                  <p>Clear</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <span className="text-foreground/20 mx-1">|</span>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <a
+                    href="https://github.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1 text-foreground/40 hover:text-foreground/70 hover:bg-foreground/5 rounded transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                  </a>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="font-mono text-xs">
+                  <p>View source</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="text-foreground/40 hover:text-foreground/70 cursor-help transition-colors">
+                  [?]
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" align="end" className="max-w-xs font-mono text-xs">
+                <p>Paste ad tags, render in MRAID sandbox, capture screenshots & video.</p>
+                <p className="text-muted-foreground mt-1">Supports Celtra, Google DCM, Flashtalking, Sizmek, and generic MRAID.</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </TooltipProvider>
+      </header>
+
+      <main className="px-2 py-2 flex-1 overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-2 h-full">
           {/* Left Column - Controls */}
-          <div className="space-y-4 overflow-y-auto">
-            {/* Title */}
-            <h1 className="text-lg font-semibold">MRAID Capture Tool</h1>
+          <div className="space-y-2 overflow-y-auto">
 
             {/* Tag Input */}
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Ad Content</CardTitle>
+              <CardHeader className="pb-1 pt-2 px-3">
+                <CardTitle className="text-[10px] font-mono font-normal text-foreground/50 uppercase tracking-widest leading-none">Ad Content</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0 px-3 pb-3">
                 <TagInput
                   value={tagValue}
                   onChange={setTagValue}
@@ -497,10 +621,10 @@ export default function Home() {
 
             {/* Size Controls */}
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Size</CardTitle>
+              <CardHeader className="pb-1 pt-2 px-3">
+                <CardTitle className="text-[10px] font-mono font-normal text-foreground/50 uppercase tracking-widest leading-none">Size</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0 px-3 pb-3">
                 <SizeSelector
                   width={width}
                   height={height}
@@ -514,10 +638,10 @@ export default function Home() {
 
             {/* Preview Settings */}
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Background</CardTitle>
+              <CardHeader className="pb-1 pt-2 px-3">
+                <CardTitle className="text-[10px] font-mono font-normal text-foreground/50 uppercase tracking-widest leading-none">Background</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0 px-3 pb-3">
                 <BackgroundColorPicker
                   value={backgroundColor}
                   onChange={setBackgroundColor}

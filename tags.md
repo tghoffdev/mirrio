@@ -80,3 +80,97 @@
   </div>
   <div onclick="closeAd()" style="position:absolute;top:12px;right:12px;width:28px;height:28px;background:rgba(0,0,0,0.5);border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;">✕</div>
 </div>
+
+---
+
+## Google DCM Sample Tags
+
+### Google INS Tag
+```html
+<ins class='dcmads'
+ style='display:inline-block;width:300px;height:250px'
+ data-dcm-placement='N123456.123456SITENAME/B12345678.12345678'
+ data-dcm-rendering-mode='script'
+ data-dcm-https-only
+ data-dcm-resettable-device-id=''
+ data-dcm-app-id=''>
+  <script src='https://www.googletagservices.com/dcm/dcmads.js'></script>
+</ins>
+```
+
+### DoubleClick Script Tag
+```html
+<script src="https://googleads.g.doubleclick.net/pagead/ads?client=ca-pub-123456789&slotname=123456"></script>
+```
+
+### Google Studio Preview
+```html
+<iframe src="https://tpc.googlesyndication.com/simgad/12345678901234567890" width="300" height="250" frameborder="0"></iframe>
+```
+
+---
+
+## Flashtalking Sample Tags
+
+### Flashtalking Script Tag
+```html
+<script src="https://cdn.flashtalking.com/ads/123456/preview.js"></script>
+```
+
+### Flashtalking ServedBy Tag
+```html
+<script type="text/javascript">
+var ftExpTrack = "";
+var ftClick = "";
+var ftX = "";
+var ftY = "";
+var ftZ = "";
+var ftContent = "";
+var ftCustom = "";
+var ft300x250_OOBclickaliasaliasaliasaliasaliasaliasaliasaliasaliasalias = "";
+var ftRandom = Math.random()*1000000;
+var ftBuildTag1 = "<scr";
+var ftBuildTag2 = "</scr";
+var ftClick_Powerful = ftClick;
+if(typeof(ft_referrer)=="undefined"){var defined = "1"; if(self!=top){ft_referrer=escape(document.referrer);}else{ft_referrer="";}}
+var ft_flashSrc = "https://servedby.flashtalking.com/imp/1/123456;12345678;501;swf;SampleClient;300x250SampleAd/?ft_impID=&ft_id=&ft_custom=&clickTAG="+ftClick+"&cachebuster="+ftRandom+"&ft_referrer="+ft_referrer;
+</script>
+```
+
+### Innovid Tag (Flashtalking parent)
+```html
+<script src="https://s.innovid.com/1234567890abcdef/12345678/tags.js"></script>
+```
+
+---
+
+## Sizmek Sample Tags
+
+### Sizmek Serving Sys Tag
+```html
+<script type="text/javascript" src="https://bs.serving-sys.com/Serving/adServer.bs?cn=display&c=23&pli=12345678&adid=123456789"></script>
+```
+
+### Sizmek EBLoader
+```html
+<script src="https://secure-ds.serving-sys.com/BurstingScript/EBLoader.js" type="text/javascript"></script>
+<script type="text/javascript">
+if (typeof(EB) == 'undefined') {
+  EB = {};
+  EB.registerModule = function() {};
+  EB.addEventListener = function() {};
+}
+</script>
+```
+
+---
+
+## Generic MRAID Tag
+
+### Basic MRAID Banner
+```html
+<script src="mraid.js"></script>
+<div style="width:320px;height:50px;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-family:sans-serif;">
+  <span style="color:#fff;font-weight:bold;">Generic MRAID Banner</span>
+</div>
+```

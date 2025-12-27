@@ -10,9 +10,19 @@ import {
 } from "react";
 import { useMRAID } from "@/hooks/use-mraid";
 import { CeltraFrame } from "@/components/celtra-frame";
-import { detectCeltra } from "@/lib/vendors/celtra";
+import { detectVendor, getVendor } from "@/lib/vendors";
+import type { VendorDetectionResult } from "@/types";
 
 export type ContentType = "tag" | "celtra" | "html5";
+
+/** Vendor badge color mapping */
+const vendorColors: Record<string, { text: string; bg: string }> = {
+  celtra: { text: "text-blue-400", bg: "bg-blue-950/80" },
+  google: { text: "text-red-400", bg: "bg-red-950/80" },
+  flashtalking: { text: "text-purple-400", bg: "bg-purple-950/80" },
+  sizmek: { text: "text-orange-400", bg: "bg-orange-950/80" },
+  generic: { text: "text-gray-400", bg: "bg-gray-950/80" },
+};
 
 interface PreviewFrameProps {
   width: number;
@@ -99,22 +109,46 @@ export const PreviewFrame = forwardRef<HTMLDivElement, PreviewFrameProps>(
     [ref]
   );
 
-  // Detect if this is a Celtra tag
-  const celtraInfo = useMemo(() => {
+  // Detect vendor from tag
+  const vendorInfo = useMemo((): VendorDetectionResult | null => {
     if (!tag) return null;
-    const result = detectCeltra(tag);
-    return result.isCeltra ? result : null;
+    return detectVendor(tag);
   }, [tag]);
+
+  // Get vendor display info
+  const vendorDisplay = useMemo(() => {
+    if (!vendorInfo) return null;
+    const vendor = getVendor(vendorInfo.platform);
+    const colors = vendorColors[vendorInfo.platform] || vendorColors.generic;
+    return {
+      name: vendor?.displayName || vendorInfo.platform,
+      ...colors,
+    };
+  }, [vendorInfo]);
+
+  // Check if this is Celtra with a preview URL (requires special rendering)
+  const isCeltraWithPreview = vendorInfo?.platform === "celtra" && vendorInfo.previewUrl;
 
   // Load tag when it changes (non-Celtra only)
   useEffect(() => {
-    if (tag && !celtraInfo) {
+    console.log("[PreviewFrame] Tag effect triggered", {
+      hasTag: !!tag,
+      tagLength: tag?.length,
+      vendorPlatform: vendorInfo?.platform,
+      isCeltraWithPreview,
+    });
+
+    if (tag && !isCeltraWithPreview) {
+      console.log("[PreviewFrame] Loading tag via MRAID...");
       mraid.loadTag(tag);
     } else if (!tag) {
+      console.log("[PreviewFrame] Clearing MRAID container");
       mraid.clear();
+    } else {
+      console.log("[PreviewFrame] Using Celtra preview URL, skipping MRAID");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tag, celtraInfo]);
+  }, [tag, isCeltraWithPreview]);
 
   // Reset Celtra ready state when tag changes
   useEffect(() => {
@@ -130,13 +164,13 @@ export const PreviewFrame = forwardRef<HTMLDivElement, PreviewFrameProps>(
   useEffect(() => {
     const isReady = html5Url
       ? html5Ready
-      : celtraInfo
+      : isCeltraWithPreview
         ? celtraReady
         : mraid.isReady;
     if (isReady) {
       onReady?.();
     }
-  }, [mraid.isReady, celtraReady, html5Ready, celtraInfo, html5Url, onReady]);
+  }, [mraid.isReady, celtraReady, html5Ready, isCeltraWithPreview, html5Url, onReady]);
 
   // Countdown overlay for reload-and-record
   const CountdownOverlay = () => (
@@ -206,8 +240,8 @@ export const PreviewFrame = forwardRef<HTMLDivElement, PreviewFrameProps>(
     );
   }
 
-  // Render Celtra ads differently
-  if (tag && celtraInfo) {
+  // Render Celtra ads with preview URL differently
+  if (tag && isCeltraWithPreview && vendorInfo) {
     return (
       <div
         ref={setRefs}
@@ -217,32 +251,20 @@ export const PreviewFrame = forwardRef<HTMLDivElement, PreviewFrameProps>(
         {countdown !== null && <CountdownOverlay />}
         {doesNotFit && !suppressOverflowWarning && <OverflowWarning />}
         <div className="relative border border-border rounded overflow-hidden bg-white">
-          {celtraInfo.previewUrl ? (
-            <CeltraFrame
-              width={width}
-              height={height}
-              previewUrl={celtraInfo.previewUrl}
-              onReady={() => setCeltraReady(true)}
-            />
-          ) : (
-            <div
-              className="flex items-center justify-center text-muted-foreground bg-muted/50"
-              style={{ width, height }}
-            >
-              <div className="text-center px-4">
-                <p className="font-medium">Celtra Tag Detected</p>
-                <p className="text-sm mt-2">
-                  Could not extract ad ID. Please use a Celtra preview URL instead.
-                </p>
-              </div>
-            </div>
-          )}
+          <CeltraFrame
+            width={width}
+            height={height}
+            previewUrl={vendorInfo.previewUrl!}
+            onReady={() => setCeltraReady(true)}
+          />
         </div>
 
-        {/* Celtra badge */}
-        <div className="absolute top-2 left-2 text-xs text-blue-400 bg-blue-950/80 px-2 py-1 rounded">
-          Celtra
-        </div>
+        {/* Vendor badge */}
+        {vendorDisplay && (
+          <div className={`absolute top-2 left-2 text-xs ${vendorDisplay.text} ${vendorDisplay.bg} px-2 py-1 rounded`}>
+            {vendorDisplay.name}
+          </div>
+        )}
 
         {/* Size indicator */}
         <div className="absolute bottom-2 right-2 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded">
@@ -309,6 +331,13 @@ export const PreviewFrame = forwardRef<HTMLDivElement, PreviewFrameProps>(
           </div>
         )}
       </div>
+
+      {/* Vendor badge */}
+      {vendorDisplay && tag && (
+        <div className={`absolute top-2 left-2 text-xs ${vendorDisplay.text} ${vendorDisplay.bg} px-2 py-1 rounded`}>
+          {vendorDisplay.name}
+        </div>
+      )}
 
       {/* Size indicator */}
       <div className="absolute bottom-2 right-2 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded">

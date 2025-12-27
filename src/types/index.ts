@@ -44,4 +44,23 @@ export type AdPlatform =
   | "google"
   | "flashtalking"
   | "sizmek"
+  | "innovid"
+  | "adform"
   | "generic";
+
+/** Result from vendor detection */
+export interface VendorDetectionResult {
+  platform: AdPlatform;
+  tag: string;
+  previewUrl?: string;
+  metadata?: Record<string, string>;
+}
+
+/** Vendor detector interface */
+export interface VendorDetector {
+  name: AdPlatform;
+  displayName: string;
+  detect: (tag: string) => VendorDetectionResult | null;
+  transformUrl?: (url: string) => string;
+  requiresSpecialRendering?: boolean;
+}

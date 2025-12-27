@@ -123,3 +123,53 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom Scrollbar - Neo-brutalist stipple */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: repeating-linear-gradient(
+    0deg,
+    oklch(0.2 0 0) 0px,
+    oklch(0.2 0 0) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+}
+
+::-webkit-scrollbar-thumb {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      oklch(0.4 0 0) 0px,
+      oklch(0.4 0 0) 1px,
+      oklch(0.3 0 0) 1px,
+      oklch(0.3 0 0) 2px
+    );
+  border: 1px solid oklch(0.5 0 0);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      oklch(0.5 0 0) 0px,
+      oklch(0.5 0 0) 1px,
+      oklch(0.4 0 0) 1px,
+      oklch(0.4 0 0) 2px
+    );
+  border: 1px solid oklch(0.6 0 0);
+}
+
+::-webkit-scrollbar-corner {
+  background: oklch(0.15 0 0);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.4 0 0) oklch(0.2 0 0);
+}

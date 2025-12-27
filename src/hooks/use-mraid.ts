@@ -60,12 +60,20 @@ export function useMRAID(options: UseMRAIDOptions): UseMRAIDReturn {
   // Load a tag into the container
   const loadTag = useCallback(
     (tag: string) => {
+      console.log("[useMRAID] loadTag called", {
+        tagLength: tag.length,
+        tagPreview: tag.substring(0, 100) + "...",
+        hasContainerRef: !!containerRef.current,
+      });
+
       if (!containerRef.current) {
+        console.error("[useMRAID] Container ref not available!");
         setError("Container ref not available");
         return;
       }
 
       // Cleanup existing instance
+      console.log("[useMRAID] Cleaning up existing instance...");
       cleanup();
 
       // Reset state
@@ -76,10 +84,15 @@ export function useMRAID(options: UseMRAIDOptions): UseMRAIDReturn {
 
       // Sanitize tag
       const sanitized = sanitizeTag(tag);
+      console.log("[useMRAID] Tag sanitized", {
+        originalLength: tag.length,
+        sanitizedLength: sanitized.length,
+      });
       currentTagRef.current = sanitized;
       setCurrentTag(sanitized);
 
       try {
+        console.log("[useMRAID] Creating MRAID container...", { width, height });
         // Create new container
         instanceRef.current = createMRAIDContainer(
           containerRef.current,
@@ -88,18 +101,22 @@ export function useMRAID(options: UseMRAIDOptions): UseMRAIDReturn {
             width,
             height,
             onReady: () => {
+              console.log("[useMRAID] Container ready!");
               setIsLoading(false);
               setIsReady(true);
               setState("default");
             },
             onError: (err) => {
+              console.error("[useMRAID] Container error:", err.message);
               setIsLoading(false);
               setError(err.message);
               setState("hidden");
             },
           }
         );
+        console.log("[useMRAID] Container created successfully");
       } catch (err) {
+        console.error("[useMRAID] Exception creating container:", err);
         setIsLoading(false);
         setError(err instanceof Error ? err.message : "Unknown error");
         setState("hidden");
