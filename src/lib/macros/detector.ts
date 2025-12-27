@@ -229,6 +229,53 @@ export function getFormatDisplay(format: MacroFormat): string {
  * Scan HTML5 iframe content for macros (async to fetch external scripts)
  * This extracts all HTML, inline JS, and external JS to detect bundle-level macros
  */
+/**
+ * Replace a macro in the iframe DOM with a value
+ * This finds all text nodes containing the macro and replaces them
+ */
+export function replaceMacroInDOM(
+  iframe: HTMLIFrameElement,
+  macro: DetectedMacro,
+  value: string
+): number {
+  try {
+    const doc = iframe.contentDocument;
+    if (!doc) return 0;
+
+    let replacementCount = 0;
+    const walker = doc.createTreeWalker(
+      doc.body,
+      NodeFilter.SHOW_TEXT,
+      null
+    );
+
+    const nodesToUpdate: { node: Text; newText: string }[] = [];
+
+    while (walker.nextNode()) {
+      const node = walker.currentNode as Text;
+      const text = node.textContent || "";
+      if (text.includes(macro.raw)) {
+        nodesToUpdate.push({
+          node,
+          newText: text.split(macro.raw).join(value),
+        });
+        replacementCount++;
+      }
+    }
+
+    // Apply updates
+    for (const { node, newText } of nodesToUpdate) {
+      node.textContent = newText;
+    }
+
+    console.log(`[MacroDetector] Replaced ${replacementCount} occurrences of ${macro.raw}`);
+    return replacementCount;
+  } catch (e) {
+    console.warn("[MacroDetector] Failed to replace macro in DOM:", e);
+    return 0;
+  }
+}
+
 export async function scanIframeForMacros(iframe: HTMLIFrameElement): Promise<DetectedMacro[]> {
   try {
     const doc = iframe.contentDocument;

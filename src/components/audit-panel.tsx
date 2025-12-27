@@ -56,6 +56,10 @@ interface AuditPanelProps {
   onTextReloadWithChanges?: () => void;
   /** Macros scanned from HTML5 iframe content */
   html5Macros?: DetectedMacro[];
+  /** Callback to replace macro in DOM (for HTML5 content) */
+  onMacroReplaceInDOM?: (macro: DetectedMacro, value: string) => void;
+  /** Whether content is HTML5 (affects macro editing behavior) */
+  isHtml5?: boolean;
 }
 
 export function AuditPanel({
@@ -71,6 +75,8 @@ export function AuditPanel({
   onReloadWithChanges,
   onTextReloadWithChanges,
   html5Macros = [],
+  onMacroReplaceInDOM,
+  isHtml5 = false,
 }: AuditPanelProps) {
   // Track the "base tag" for macro detection - the original tag before any macro replacements
   const [baseTag, setBaseTag] = useState(tag);
@@ -142,9 +148,14 @@ export function AuditPanel({
   const [lastTextModifiedTag, setLastTextModifiedTag] = useState<string | null>(null);
 
   // Handle macro value change
-  const handleMacroChange = useCallback((macroRaw: string, value: string) => {
-    setMacroValues(prev => ({ ...prev, [macroRaw]: value }));
-  }, []);
+  const handleMacroChange = useCallback((macro: DetectedMacro, value: string) => {
+    setMacroValues(prev => ({ ...prev, [macro.raw]: value }));
+
+    // For HTML5 content, also replace in DOM immediately
+    if (isHtml5 && onMacroReplaceInDOM && value.trim()) {
+      onMacroReplaceInDOM(macro, value);
+    }
+  }, [isHtml5, onMacroReplaceInDOM]);
 
   // Get modified tag with macro replacements applied
   const getModifiedTag = useCallback(() => {
@@ -319,7 +330,7 @@ export function AuditPanel({
                         key={`${macro.format}:${macro.name}`}
                         macro={macro}
                         value={macroValues[macro.raw] || ""}
-                        onChange={(value) => handleMacroChange(macro.raw, value)}
+                        onChange={(value) => handleMacroChange(macro, value)}
                       />
                     ))}
                   </>

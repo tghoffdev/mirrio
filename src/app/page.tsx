@@ -21,7 +21,7 @@ import { BackgroundColorPicker } from "@/components/background-color-picker";
 import { CaptureControls } from "@/components/capture-controls";
 import { AuditPanel, type MRAIDEvent } from "@/components/audit-panel";
 import { scanTextElements, updateTextElement, type TextElement } from "@/lib/dco/scanner";
-import { detectMacros, scanIframeForMacros, type DetectedMacro } from "@/lib/macros/detector";
+import { detectMacros, scanIframeForMacros, replaceMacroInDOM, type DetectedMacro } from "@/lib/macros/detector";
 import { detectVendor } from "@/lib/vendors";
 import {
   useRecorder,
@@ -351,6 +351,14 @@ export default function Home() {
   const handleResize = useCallback((newWidth: number, newHeight: number) => {
     setWidth(newWidth);
     setHeight(newHeight);
+  }, []);
+
+  // Handle macro replacement in DOM (for HTML5 content)
+  const handleMacroReplaceInDOM = useCallback((macro: DetectedMacro, value: string) => {
+    const iframe = previewFrameRef.current?.getIframe();
+    if (iframe) {
+      replaceMacroInDOM(iframe, macro, value);
+    }
   }, []);
 
   const handleScreenshot = useCallback(async () => {
@@ -800,6 +808,8 @@ export default function Home() {
                 onReloadWithChanges={handleMacrosChange}
                 onTextReloadWithChanges={handleTextReloadWithChanges}
                 html5Macros={html5Macros}
+                onMacroReplaceInDOM={handleMacroReplaceInDOM}
+                isHtml5={!!html5Url}
               />
             </div>
           </div>
