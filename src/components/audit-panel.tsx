@@ -180,23 +180,35 @@ export function AuditPanel({
       return;
     }
 
-    // Check if this looks like a new tag (contains macros not derived from baseTag)
+    // Check if this looks like a new tag vs a modification (compliance fix, etc.)
     const newMacros = detectMacros(tag);
-    const baseMacros = detectMacros(baseTag);
+    const currentBaseMacros = detectMacros(baseTag);
 
-    // If there are new macros that weren't in the base, it's a new tag
-    const hasNewMacros = newMacros.some(
-      nm => !baseMacros.find(bm => bm.raw === nm.raw)
+    // Check if the new tag contains the base tag (it's a modification that added content)
+    // This handles compliance fixes that inject code at the start/end
+    const isModificationOfBase = baseTag && (
+      tag.includes(baseTag) ||
+      // Also check if base content is mostly preserved (allow for minor additions)
+      baseTag.length > 100 && tag.length < baseTag.length * 1.5 &&
+      currentBaseMacros.every(bm => newMacros.find(nm => nm.raw === bm.raw))
     );
 
-    // If base is empty, or there are new macros, it's a new tag
-    const isNewTag = !baseTag || hasNewMacros;
+    // It's only a truly new tag if:
+    // - No base tag exists, OR
+    // - The new tag doesn't contain/preserve the base content AND has significantly different macros
+    const isNewTag = !baseTag || (!isModificationOfBase &&
+      // Less than half of base macros are preserved
+      currentBaseMacros.filter(bm => newMacros.find(nm => nm.raw === bm.raw)).length < currentBaseMacros.length / 2
+    );
 
     if (isNewTag) {
       setBaseTag(tag);
       setMacroValues({});
       setBaseMacros([]); // Clear base macros for new content
       setLastTextModifiedTag(null);
+    } else if (isModificationOfBase) {
+      // It's a modification - update base tag but preserve macro values
+      setBaseTag(tag);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tag, baseTag]);

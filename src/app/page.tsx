@@ -438,12 +438,22 @@ export default function Home() {
 
   // Clear MRAID events and compliance result when tag changes
   // (complianceData is set by the load handlers, not cleared here)
+  // NOTE: macroValues is NOT reset here - audit-panel.tsx manages its own state
+  // and syncs back via onMacroValuesChange. It has smarter "is new tag" detection.
   useEffect(() => {
     setMraidEvents([]);
     setComplianceResult(null);
     setIsExpanded(false); // Reset expanded state on new content
     setClickMacroFixApplied(false); // Reset click macro fix tracking
-    setMacroValues({}); // Reset macro values
+
+    // Update loadStart timing here (after state commits) rather than in handleLoadTag
+    // This ensures we measure actual ad load time, not React's rendering pipeline
+    if (loadedTag || html5Url) {
+      setComplianceData((prev) => ({
+        ...prev,
+        timing: { loadStart: Date.now() },
+      }));
+    }
   }, [loadedTag, html5Url]);
 
   // Reset expanded state when format type changes
@@ -756,6 +766,11 @@ export default function Home() {
       }
     });
     console.log("[DCO] Stored", pendingTextModsRef.current.size, "text modifications for reload");
+    // Reset timing for fresh measurement
+    setComplianceData((prev) => ({
+      ...prev,
+      timing: { loadStart: Date.now() },
+    }));
     // Trigger reload
     setIsAdReady(false);
     setPreviewKey((k) => k + 1);
@@ -953,13 +968,21 @@ export default function Home() {
   // Reload ad and re-run compliance checks
   const handleReloadAndRecheck = useCallback(() => {
     if (!loadedTag && !html5Url) return;
+
+    // Store text modifications before reload so they persist
+    textElements.forEach(el => {
+      if (el.currentText !== el.originalText) {
+        pendingTextModsRef.current.set(el.originalText, el.currentText);
+      }
+    });
+
     // Clear current result
     setComplianceResult(null);
     // Set flag to auto-run compliance when ad is ready
     autoRunComplianceRef.current = true;
     // Reload the ad
     handleReload();
-  }, [loadedTag, html5Url, handleReload]);
+  }, [loadedTag, html5Url, handleReload, textElements]);
 
   const handleScreenshot = useCallback(async () => {
     const container = previewFrameRef.current?.getContainer();
