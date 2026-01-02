@@ -13,6 +13,7 @@ import { useMRAID } from "@/hooks/use-mraid";
 import { CeltraFrame } from "@/components/celtra-frame";
 import { detectVendor, getVendor } from "@/lib/vendors";
 import type { VendorDetectionResult } from "@/types";
+import type { AdFormatType } from "@/components/size-selector";
 
 export type ContentType = "tag" | "celtra" | "html5";
 
@@ -42,6 +43,15 @@ interface PreviewFrameProps {
   suppressOverflowWarning?: boolean;
   /** Countdown number to display (null = no countdown) */
   countdown?: number | null;
+  /** Ad format type for expandable support */
+  formatType?: AdFormatType;
+  /** Expanded dimensions for expandable ads */
+  expandedWidth?: number;
+  expandedHeight?: number;
+  /** Whether the ad is currently expanded */
+  isExpanded?: boolean;
+  /** Callback when expand state changes */
+  onExpandChange?: (expanded: boolean) => void;
 }
 
 /** Handle exposed by PreviewFrame ref */
@@ -54,7 +64,7 @@ export interface PreviewFrameHandle {
 
 export const PreviewFrame = forwardRef<PreviewFrameHandle, PreviewFrameProps>(
   function PreviewFrame(
-    { width, height, tag, html5Url, isLoadingHtml5 = false, backgroundColor = "#18181b", borderColor = "#27272a", onReady, onResize, suppressOverflowWarning = false, countdown = null },
+    { width, height, tag, html5Url, isLoadingHtml5 = false, backgroundColor = "#18181b", borderColor = "#27272a", onReady, onResize, suppressOverflowWarning = false, countdown = null, formatType = "banner", expandedWidth = 320, expandedHeight = 480, isExpanded = false, onExpandChange },
     ref
   ) {
   const mraid = useMRAID({ width, height });
@@ -122,6 +132,24 @@ export const PreviewFrame = forwardRef<PreviewFrameHandle, PreviewFrameProps>(
     return () => window.removeEventListener("resize", checkFit);
   }, [checkFit]);
 
+  // Update iframe dimensions for expandable format
+  useEffect(() => {
+    if (formatType !== "expandable") return;
+
+    const iframe = mraid.getIframe();
+    if (!iframe) return;
+
+    if (isExpanded) {
+      // When expanded, iframe should fill container
+      iframe.style.width = "100%";
+      iframe.style.height = "100%";
+    } else {
+      // When collapsed, use the collapsed dimensions
+      iframe.style.width = `${width}px`;
+      iframe.style.height = `${height}px`;
+    }
+  }, [isExpanded, formatType, width, height, mraid]);
+
   // Set container ref
   const setContainerRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -150,18 +178,24 @@ export const PreviewFrame = forwardRef<PreviewFrameHandle, PreviewFrameProps>(
   // Check if this is Celtra with a preview URL (requires special rendering)
   const isCeltraWithPreview = vendorInfo?.platform === "celtra" && vendorInfo.previewUrl;
 
-  // Load tag when it changes (non-Celtra only)
+  // Load tag when it changes or format type changes (non-Celtra only)
+  // formatType is included because the container ref changes location based on format
   useEffect(() => {
     console.log("[PreviewFrame] Tag effect triggered", {
       hasTag: !!tag,
       tagLength: tag?.length,
       vendorPlatform: vendorInfo?.platform,
       isCeltraWithPreview,
+      formatType,
     });
 
     if (tag && !isCeltraWithPreview) {
       console.log("[PreviewFrame] Loading tag via MRAID...");
-      mraid.loadTag(tag);
+      // Small delay to ensure the new container is mounted when format changes
+      const timer = setTimeout(() => {
+        mraid.loadTag(tag);
+      }, 50);
+      return () => clearTimeout(timer);
     } else if (!tag) {
       console.log("[PreviewFrame] Clearing MRAID container");
       mraid.clear();
@@ -169,7 +203,7 @@ export const PreviewFrame = forwardRef<PreviewFrameHandle, PreviewFrameProps>(
       console.log("[PreviewFrame] Using Celtra preview URL, skipping MRAID");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tag, isCeltraWithPreview]);
+  }, [tag, isCeltraWithPreview, formatType]);
 
   // Reset Celtra ready state when tag changes
   useEffect(() => {
@@ -267,7 +301,11 @@ export const PreviewFrame = forwardRef<PreviewFrameHandle, PreviewFrameProps>(
   }
 
   // Render Celtra ads with preview URL differently
+  // For expandable format, use expanded dimensions since Celtra handles its own expansion
   if (tag && isCeltraWithPreview && vendorInfo) {
+    const celtraWidth = formatType === "expandable" ? expandedWidth : width;
+    const celtraHeight = formatType === "expandable" ? expandedHeight : height;
+
     return (
       <div
         ref={setContainerRef}
@@ -281,8 +319,8 @@ export const PreviewFrame = forwardRef<PreviewFrameHandle, PreviewFrameProps>(
           style={{ border: `1px solid ${borderColor}` }}
         >
           <CeltraFrame
-            width={width}
-            height={height}
+            width={celtraWidth}
+            height={celtraHeight}
             previewUrl={vendorInfo.previewUrl!}
             onReady={() => setCeltraReady(true)}
           />
@@ -295,9 +333,147 @@ export const PreviewFrame = forwardRef<PreviewFrameHandle, PreviewFrameProps>(
           </div>
         )}
 
+        {/* Format indicator for expandable */}
+        {formatType === "expandable" && (
+          <div className="absolute top-2 right-2 text-[10px] text-amber-400 bg-amber-950/80 px-2 py-1 rounded">
+            Expandable
+          </div>
+        )}
+
         {/* Size indicator */}
         <div className="absolute bottom-2 right-2 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded">
-          {width} × {height}
+          {celtraWidth} × {celtraHeight}
+        </div>
+      </div>
+    );
+  }
+
+  // Render expandable format with mock website shell
+  if (formatType === "expandable" && !isCeltraWithPreview && !html5Url) {
+    const browserChromeHeight = 36;
+
+    return (
+      <div
+        ref={setContainerRef}
+        className="relative flex items-center justify-center h-full min-h-[400px] rounded-lg"
+        style={{ backgroundColor }}
+      >
+        {countdown !== null && <CountdownOverlay />}
+        {doesNotFit && !suppressOverflowWarning && <OverflowWarning />}
+
+        {/* Mock Website Shell - inlined to prevent remounting */}
+        {/* isolation: isolate creates stacking context to contain fixed-position ads */}
+        <div
+          className="relative bg-white overflow-hidden flex flex-col isolate"
+          style={{
+            width: expandedWidth,
+            height: expandedHeight,
+            border: `1px solid ${borderColor}`,
+            borderRadius: 8
+          }}
+        >
+          {/* Mock Browser Header - z-10 ensures it stays above content */}
+          <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 border-b border-gray-200 relative z-10" style={{ height: browserChromeHeight }}>
+            <div className="flex gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+              <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+              <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
+            </div>
+            <div className="flex-1 mx-2">
+              <div className="h-5 bg-white rounded border border-gray-300 px-2 flex items-center">
+                <span className="text-[9px] text-gray-400 font-mono truncate">example.com/article</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Mock Website Content - isolate contains expanded ad stacking context */}
+          <div className="flex-1 overflow-hidden relative isolate">
+            {/* Mock article content - hidden when expanded */}
+            {!isExpanded && (
+              <div className="p-3 space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-3/4" />
+                <div className="h-2.5 bg-gray-100 rounded w-full" />
+                <div className="h-2.5 bg-gray-100 rounded w-5/6" />
+                <div className="h-2.5 bg-gray-100 rounded w-4/5" />
+              </div>
+            )}
+
+            {/* Ad Container - always the same element, just changes size/position */}
+            <div
+              className={`relative transition-all duration-300 overflow-hidden ${
+                isExpanded
+                  ? "absolute inset-0 z-[5]"
+                  : "mx-auto my-2 cursor-pointer hover:scale-[1.01]"
+              }`}
+              style={isExpanded ? {} : { width, height }}
+              onClick={!isExpanded ? () => onExpandChange?.(true) : undefined}
+            >
+              <div
+                ref={mraid.containerRef}
+                className="w-full h-full bg-white overflow-hidden"
+                style={{ border: isExpanded ? "none" : `1px solid ${borderColor}` }}
+              />
+
+              {/* Tap to expand hint - only when collapsed */}
+              {!isExpanded && tag && (
+                <div className="absolute bottom-1 right-1 text-[8px] text-white/80 bg-black/50 px-1.5 py-0.5 rounded">
+                  Tap to expand
+                </div>
+              )}
+
+              {/* Close button - only when expanded */}
+              {isExpanded && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onExpandChange?.(false);
+                  }}
+                  className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-black/70 hover:bg-black/90 text-white flex items-center justify-center transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+
+            {/* More mock content - hidden when expanded */}
+            {!isExpanded && (
+              <div className="p-3 space-y-2">
+                <div className="h-2.5 bg-gray-100 rounded w-full" />
+                <div className="h-2.5 bg-gray-100 rounded w-4/5" />
+                <div className="h-2.5 bg-gray-100 rounded w-5/6" />
+                <div className="h-2.5 bg-gray-100 rounded w-3/4" />
+              </div>
+            )}
+
+            {/* Loading indicator */}
+            {mraid.isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-[6]">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <span className="text-sm text-muted-foreground">Loading ad...</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Vendor badge */}
+        {vendorDisplay && tag && (
+          <div className={`absolute top-2 left-2 text-xs ${vendorDisplay.text} ${vendorDisplay.bg} px-2 py-1 rounded`}>
+            {vendorDisplay.name}
+          </div>
+        )}
+
+        {/* Format indicator */}
+        <div className="absolute top-2 right-2 text-[10px] text-amber-400 bg-amber-950/80 px-2 py-1 rounded">
+          Expandable
+        </div>
+
+        {/* Size indicator */}
+        <div className="absolute bottom-2 right-2 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded">
+          {isExpanded ? `${expandedWidth} × ${expandedHeight}` : `${width} × ${height}`} {isExpanded && "(expanded)"}
         </div>
       </div>
     );

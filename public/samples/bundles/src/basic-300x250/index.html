@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=300, height=250, initial-scale=1.0">
+  <meta name="ad.size" content="width=300,height=250">
+  <title>Basic Banner - 300x250</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      width: 300px;
+      height: 250px;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .container {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+    }
+    .logo {
+      width: 60px;
+      height: 60px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 15px;
+    }
+    .headline {
+      color: white;
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+    }
+    .subhead {
+      color: rgba(255,255,255,0.85);
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    .cta {
+      background: white;
+      color: #764ba2;
+      padding: 12px 32px;
+      border-radius: 25px;
+      font-weight: bold;
+      font-size: 14px;
+      margin-top: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      transition: transform 0.2s;
+    }
+    .cta:hover {
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <div class="container" onclick="handleClick()">
+    <div class="logo">✨</div>
+    <div class="headline">Premium Quality</div>
+    <div class="subhead">Discover the difference</div>
+    <div class="cta">Learn More</div>
+  </div>
+
+  <script>
+    // ClickTag support for HTML5 ads
+    var clickTag = window.clickTag || 'https://example.com';
+
+    function handleClick() {
+      window.open(clickTag, '_blank');
+    }
+
+    // MRAID support
+    if (typeof mraid !== 'undefined') {
+      if (mraid.getState() === 'loading') {
+        mraid.addEventListener('ready', onMraidReady);
+      } else {
+        onMraidReady();
+      }
+    }
+
+    function onMraidReady() {
+      console.log('MRAID Ready');
+    }
+  </script>
+</body>
+</html>

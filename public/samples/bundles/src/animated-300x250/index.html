@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=300, height=250, initial-scale=1.0">
+  <meta name="ad.size" content="width=300,height=250">
+  <title>Animated Banner - 300x250</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      width: 300px;
+      height: 250px;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .container {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Animated background circles */
+    .bg-circle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      animation: float 6s ease-in-out infinite;
+    }
+    .bg-circle:nth-child(1) {
+      width: 100px;
+      height: 100px;
+      top: -20px;
+      right: -20px;
+      animation-delay: 0s;
+    }
+    .bg-circle:nth-child(2) {
+      width: 150px;
+      height: 150px;
+      bottom: -50px;
+      left: -50px;
+      animation-delay: 2s;
+    }
+    .bg-circle:nth-child(3) {
+      width: 80px;
+      height: 80px;
+      top: 50%;
+      right: 10%;
+      animation-delay: 4s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-20px) scale(1.1); }
+    }
+
+    /* Content animations */
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    .badge {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      animation: slideUp 0.6s ease-out;
+    }
+
+    .headline {
+      color: white;
+      font-size: 28px;
+      font-weight: bold;
+      margin-top: 12px;
+      animation: slideUp 0.6s ease-out 0.2s both;
+    }
+
+    .price {
+      color: white;
+      font-size: 18px;
+      margin-top: 8px;
+      animation: slideUp 0.6s ease-out 0.4s both;
+    }
+    .price .old {
+      text-decoration: line-through;
+      opacity: 0.6;
+      margin-right: 8px;
+    }
+    .price .new {
+      font-weight: bold;
+      font-size: 24px;
+    }
+
+    .cta {
+      background: white;
+      color: #11998e;
+      padding: 12px 32px;
+      border-radius: 25px;
+      font-weight: bold;
+      font-size: 14px;
+      margin-top: 20px;
+      animation: slideUp 0.6s ease-out 0.6s both, pulse 2s ease-in-out 1.2s infinite;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="container" onclick="handleClick()">
+    <div class="bg-circle"></div>
+    <div class="bg-circle"></div>
+    <div class="bg-circle"></div>
+
+    <div class="content">
+      <div class="badge">Limited Offer</div>
+      <div class="headline">Summer Sale</div>
+      <div class="price">
+        <span class="old">$99</span>
+        <span class="new">$49</span>
+      </div>
+      <div class="cta">Shop Now</div>
+    </div>
+  </div>
+
+  <script>
+    var clickTag = window.clickTag || 'https://example.com';
+
+    function handleClick() {
+      window.open(clickTag, '_blank');
+    }
+  </script>
+</body>
+</html>

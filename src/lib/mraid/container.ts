@@ -105,6 +105,16 @@ export function createMRAIDContainer(
     video:not([playsinline]) {
       /* Force inline playback behavior via CSS */
     }
+    /* Force expanded states to fill container - override hardcoded dimensions */
+    #expanded, .expanded, [id*="expanded"], [class*="expanded"],
+    #fullscreen, .fullscreen, [id*="fullscreen"], [class*="fullscreen"] {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100% !important;
+      max-height: 100% !important;
+      left: 0 !important;
+      top: 0 !important;
+    }
   </style>
   <script>
     // Inject MRAID bridge before any ad code runs

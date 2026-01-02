@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=320, height=50, initial-scale=1.0">
+  <meta name="ad.size" content="width=320,height=50">
+  <title>Mobile Banner - 320x50</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      width: 320px;
+      height: 50px;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    .container {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #4776E6 0%, #8E54E9 100%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+    .left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .icon {
+      width: 32px;
+      height: 32px;
+      background: white;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .text {
+      color: white;
+    }
+    .title {
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .subtitle {
+      font-size: 10px;
+      opacity: 0.85;
+    }
+    .cta {
+      background: white;
+      color: #4776E6;
+      padding: 8px 16px;
+      border-radius: 15px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" onclick="handleClick()">
+    <div class="left">
+      <div class="icon">🎮</div>
+      <div class="text">
+        <div class="title">Download Now</div>
+        <div class="subtitle">Free to play</div>
+      </div>
+    </div>
+    <div class="cta">Install</div>
+  </div>
+
+  <script>
+    var clickTag = window.clickTag || 'https://example.com';
+
+    function handleClick() {
+      if (typeof mraid !== 'undefined') {
+        mraid.open(clickTag);
+      } else {
+        window.open(clickTag, '_blank');
+      }
+    }
+  </script>
+</body>
+</html>

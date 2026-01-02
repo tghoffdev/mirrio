@@ -159,7 +159,7 @@
       try {
         window.parent.postMessage({
           type: 'mraid-event',
-          event: 'click',
+          event: 'open',
           args: [url],
           timestamp: Date.now()
         }, '*');
@@ -167,17 +167,33 @@
     },
     close: function() {
       console.log('[MRAID] close() called');
+      if (state === 'expanded') {
+        state = 'default';
+        mraid._fireEvent('stateChange', 'default');
+        try {
+          window.parent.postMessage({
+            type: 'mraid-event',
+            event: 'close',
+            args: [],
+            timestamp: Date.now()
+          }, '*');
+        } catch (e) {}
+      }
     },
     expand: function(url) {
       console.log('[MRAID] expand() called:', url);
-      try {
-        window.parent.postMessage({
-          type: 'mraid-event',
-          event: 'expand',
-          args: [url],
-          timestamp: Date.now()
-        }, '*');
-      } catch (e) {}
+      if (state === 'default') {
+        state = 'expanded';
+        mraid._fireEvent('stateChange', 'expanded');
+        try {
+          window.parent.postMessage({
+            type: 'mraid-event',
+            event: 'expand',
+            args: [url],
+            timestamp: Date.now()
+          }, '*');
+        } catch (e) {}
+      }
     },
     resize: function() {
       console.log('[MRAID] resize() called');

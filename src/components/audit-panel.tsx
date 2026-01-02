@@ -20,6 +20,8 @@ import {
 } from "@/lib/dco/scanner";
 import { Textarea } from "@/components/ui/textarea";
 import { analytics } from "@/lib/analytics";
+import { ComplianceTab } from "@/components/compliance-tab";
+import { type ComplianceResult, getStatusColor } from "@/lib/compliance";
 
 /** Editable macro with replacement value */
 export interface EditableMacro extends DetectedMacro {
@@ -61,6 +63,16 @@ interface AuditPanelProps {
   onMacroReplaceInDOM?: (macro: DetectedMacro, value: string) => void;
   /** Whether content is HTML5 (affects macro editing behavior) */
   isHtml5?: boolean;
+  /** Compliance check results */
+  complianceResult?: ComplianceResult | null;
+  /** Run compliance checks */
+  onRunCompliance?: () => void;
+  /** Selected DSP for compliance rules */
+  selectedDSP?: string;
+  /** Change selected DSP */
+  onDSPChange?: (dsp: string) => void;
+  /** Whether there is content loaded */
+  hasContent?: boolean;
 }
 
 export function AuditPanel({
@@ -78,6 +90,11 @@ export function AuditPanel({
   html5Macros = [],
   onMacroReplaceInDOM,
   isHtml5 = false,
+  complianceResult,
+  onRunCompliance,
+  selectedDSP = "generic",
+  onDSPChange,
+  hasContent = false,
 }: AuditPanelProps) {
   // Track the "base tag" for macro detection - the original tag before any macro replacements
   const [baseTag, setBaseTag] = useState(tag);
@@ -152,7 +169,7 @@ export function AuditPanel({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tag, baseTag]);
 
-  const [activeTab, setActiveTab] = useState<"macros" | "text">("macros");
+  const [activeTab, setActiveTab] = useState<"macros" | "text" | "compliance">("macros");
   const [logExpanded, setLogExpanded] = useState(true);
   const [showExport, setShowExport] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -280,7 +297,7 @@ export function AuditPanel({
           {/* Tabs */}
           <Tabs
             value={activeTab}
-            onValueChange={(v) => setActiveTab(v as "macros" | "text")}
+            onValueChange={(v) => setActiveTab(v as "macros" | "text" | "compliance")}
             className="flex-1 flex flex-col min-h-0"
           >
             <TabsList className="mx-3 mt-2 shrink-0">
@@ -297,6 +314,16 @@ export function AuditPanel({
                 {textElements.length > 0 && (
                   <span className="ml-1.5 text-[10px] bg-foreground/10 px-1.5 py-0.5 rounded">
                     {textElements.length}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="compliance" className="flex-1 text-xs">
+                Comply
+                {complianceResult && (
+                  <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded ${getStatusColor(complianceResult.overallStatus)}`}>
+                    {complianceResult.overallStatus === "pass" ? "✓" :
+                     complianceResult.overallStatus === "fail" ? complianceResult.checks.filter(c => c.status === "fail").length :
+                     complianceResult.overallStatus === "warn" ? "!" : "..."}
                   </span>
                 )}
               </TabsTrigger>
@@ -564,6 +591,20 @@ export function AuditPanel({
                   </>
                 )}
               </div>
+            </TabsContent>
+
+            {/* Compliance Tab */}
+            <TabsContent
+              value="compliance"
+              className="flex-1 overflow-y-auto px-3 pb-3 mt-0"
+            >
+              <ComplianceTab
+                result={complianceResult}
+                onRun={onRunCompliance}
+                selectedDSP={selectedDSP}
+                onDSPChange={onDSPChange}
+                hasContent={hasContent}
+              />
             </TabsContent>
           </Tabs>
 

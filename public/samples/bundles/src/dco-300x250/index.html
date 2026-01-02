@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=300, height=250, initial-scale=1.0">
+  <meta name="ad.size" content="width=300,height=250">
+  <title>DCO Banner - 300x250</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      width: 300px;
+      height: 250px;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .container {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      position: relative;
+    }
+    .image-area {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+    }
+    .product-icon {
+      width: 80px;
+      height: 80px;
+      background: rgba(255,255,255,0.9);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .content {
+      padding: 15px;
+      text-align: center;
+    }
+    .headline {
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .offer {
+      color: #e94560;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+    .cta-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .cta {
+      flex: 1;
+      background: #e94560;
+      color: white;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 12px;
+      text-align: center;
+    }
+    .cta.secondary {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="container" onclick="handleClick()">
+    <div class="image-area">
+      <div class="product-icon">{{productIcon}}</div>
+    </div>
+    <div class="content">
+      <div class="headline">{{headline}}</div>
+      <div class="offer">{{offer}}</div>
+      <div class="cta-row">
+        <div class="cta">{{cta}}</div>
+        <div class="cta secondary">Learn More</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // DCO placeholders - these would be replaced by the ad server
+    var dcoContent = {
+      productIcon: '👟',
+      headline: 'New Arrivals',
+      offer: 'Up to 40% Off',
+      cta: 'Shop Now'
+    };
+
+    // Replace placeholders
+    document.body.innerHTML = document.body.innerHTML
+      .replace('{{productIcon}}', dcoContent.productIcon)
+      .replace('{{headline}}', dcoContent.headline)
+      .replace('{{offer}}', dcoContent.offer)
+      .replace('{{cta}}', dcoContent.cta);
+
+    var clickTag = window.clickTag || 'https://example.com';
+
+    function handleClick() {
+      window.open(clickTag, '_blank');
+    }
+  </script>
+</body>
+</html>

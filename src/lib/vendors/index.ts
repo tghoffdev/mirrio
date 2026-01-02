@@ -10,6 +10,7 @@ import { celtraDetector } from "./celtra";
 import { googleDetector } from "./google";
 import { flashtalkingDetector } from "./flashtalking";
 import { sizmekDetector } from "./sizmek";
+import { adformDetector } from "./adform";
 
 /**
  * Ordered list of vendor detectors.
@@ -20,6 +21,7 @@ const vendors: VendorDetector[] = [
   googleDetector,
   flashtalkingDetector,
   sizmekDetector,
+  adformDetector,
 ];
 
 /**
@@ -76,3 +78,4 @@ export { celtraDetector } from "./celtra";
 export { googleDetector } from "./google";
 export { flashtalkingDetector } from "./flashtalking";
 export { sizmekDetector } from "./sizmek";
+export { adformDetector } from "./adform";

@@ -15,7 +15,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { TagInput, type InputMode } from "@/components/tag-input";
-import { SizeSelector } from "@/components/size-selector";
+import { SizeSelector, type AdFormatType } from "@/components/size-selector";
 import { PreviewFrame, type PreviewFrameHandle } from "@/components/preview-frame";
 import { BackgroundColorPicker } from "@/components/background-color-picker";
 import { CaptureControls } from "@/components/capture-controls";
@@ -42,11 +42,27 @@ import {
   updateConfig,
 } from "@/lib/html5/sw-manager";
 import type { ZipLoadResult } from "@/lib/html5/zip-loader";
+import {
+  ComplianceEngine,
+  createEmptyComplianceData,
+  type ComplianceData,
+  type ComplianceResult,
+  type FileInfo,
+  type ClickInfo,
+  type PixelInfo,
+} from "@/lib/compliance";
+import { detectExpandedSize, isExpandableTag } from "@/lib/detect-expanded-size";
 
 export default function Home() {
   const [tagValue, setTagValue] = useState("");
   const [width, setWidth] = useState(300);
   const [height, setHeight] = useState(250);
+
+  // Ad format and expandable sizes
+  const [formatType, setFormatType] = useState<AdFormatType>("banner");
+  const [expandedWidth, setExpandedWidth] = useState(320);
+  const [expandedHeight, setExpandedHeight] = useState(480);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // The tag that's currently loaded in the preview
   const [loadedTag, setLoadedTag] = useState<string | null>(null);
@@ -68,6 +84,12 @@ export default function Home() {
 
   // MRAID events
   const [mraidEvents, setMraidEvents] = useState<MRAIDEvent[]>([]);
+
+  // Compliance checking
+  const [complianceData, setComplianceData] = useState<ComplianceData>(createEmptyComplianceData());
+  const [complianceResult, setComplianceResult] = useState<ComplianceResult | null>(null);
+  const [selectedDSP, setSelectedDSP] = useState("generic");
+  const complianceEngineRef = useRef(new ComplianceEngine("generic"));
 
   // Processing hook for MP4 conversion
   const processing = useProcessing();
@@ -156,7 +178,7 @@ export default function Home() {
     });
   }, []);
 
-  // Listen for MRAID events from iframe
+  // Listen for MRAID events and compliance data from iframe/service worker
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === "mraid-event") {
@@ -170,16 +192,69 @@ export default function Home() {
         setMraidEvents((prev) => [...prev.slice(-99), newEvent]);
         // Track MRAID event
         analytics.mraidEvent(event.data.event, event.data.args?.length > 0);
+
+        // Handle expand/close for expandable format
+        if (event.data.event === "expand" && formatType === "expandable") {
+          setIsExpanded(true);
+        } else if (event.data.event === "close" && formatType === "expandable") {
+          setIsExpanded(false);
+        }
+      }
+
+      // Handle compliance file data from service worker
+      if (event.data?.type === "compliance-files") {
+        console.log("[Compliance] Received file data:", event.data.files?.length, "files");
+        setComplianceData((prev) => ({
+          ...prev,
+          files: event.data.files as FileInfo[],
+          timing: {
+            ...prev.timing,
+            loadStart: event.data.loadStart,
+          },
+        }));
       }
     };
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, []);
+  }, [formatType]);
 
-  // Clear MRAID events when tag changes
+  // Clear MRAID events and compliance data when tag changes
   useEffect(() => {
     setMraidEvents([]);
+    setComplianceData(createEmptyComplianceData());
+    setComplianceResult(null);
+    setIsExpanded(false); // Reset expanded state on new content
   }, [loadedTag, html5Url]);
+
+  // Reset expanded state when format type changes
+  useEffect(() => {
+    setIsExpanded(false);
+  }, [formatType]);
+
+  // Aggregate pixels and clicks from MRAID events into compliance data
+  useEffect(() => {
+    const pixels: PixelInfo[] = mraidEvents
+      .filter((e) => e.type === "pixel" || e.type === "beacon")
+      .map((e) => ({
+        type: (e.args?.[0] as PixelInfo["type"]) || "tracking",
+        url: (e.args?.[1] as string) || "",
+        method: e.type === "beacon" ? "beacon" : "image",
+      }));
+
+    const clicks: ClickInfo[] = mraidEvents
+      .filter((e) => e.type === "open")
+      .map((e) => ({
+        type: "mraid.open" as const,
+        url: e.args?.[0] as string,
+        hasHandler: true,
+      }));
+
+    setComplianceData((prev) => ({
+      ...prev,
+      pixels,
+      clicks,
+    }));
+  }, [mraidEvents]);
 
   // Auto-open audit panel on initial load (not reload) when macros or text exist
   useEffect(() => {
@@ -254,10 +329,24 @@ export default function Home() {
       tagValueTrimmed: tagValue.trim().length,
       hasHtml5Url: !!html5Url,
     });
-    if (tagValue.trim()) {
+    const trimmedTag = tagValue.trim();
+    if (trimmedTag) {
       // Track tag paste
-      const vendorInfo = detectVendor(tagValue.trim());
-      analytics.tagPaste(vendorInfo.platform, tagValue.trim().length);
+      const vendorInfo = detectVendor(trimmedTag);
+      analytics.tagPaste(vendorInfo.platform, trimmedTag.length);
+
+      // Auto-detect if tag is expandable and get expanded dimensions
+      if (isExpandableTag(trimmedTag)) {
+        console.log("[Page] Detected expandable tag, switching to expandable format");
+        setFormatType("expandable");
+
+        const detectedSize = detectExpandedSize(trimmedTag);
+        if (detectedSize) {
+          console.log("[Page] Auto-detected expanded size:", detectedSize);
+          setExpandedWidth(detectedSize.width);
+          setExpandedHeight(detectedSize.height);
+        }
+      }
 
       // Clear HTML5 content when loading a tag
       if (html5Url) {
@@ -265,22 +354,110 @@ export default function Home() {
         setHtml5Url(null);
         setHtml5EntryPoint(null);
       }
-      console.log("[Page] Setting loadedTag:", tagValue.trim().substring(0, 100) + "...");
-      setLoadedTag(tagValue.trim());
+      console.log("[Page] Setting loadedTag:", trimmedTag.substring(0, 100) + "...");
+
+      // Only increment previewKey if loading the SAME tag (reload)
+      // Otherwise, the tag change itself will trigger the effect
+      const isReload = loadedTag === trimmedTag;
+      setLoadedTag(trimmedTag);
       setIsAdReady(false);
-      setPreviewKey((k) => k + 1);
+      if (isReload) {
+        setPreviewKey((k) => k + 1);
+      }
     } else {
       console.log("[Page] handleLoadTag - tagValue is empty, skipping");
     }
-  }, [tagValue, html5Url]);
+  }, [tagValue, html5Url, loadedTag]);
 
   // Handle macro replacement - updates tag and reloads
   const handleMacrosChange = useCallback((modifiedTag: string) => {
     setTagValue(modifiedTag);
+    // For macro changes, the tag content is different, so the effect will trigger
+    // No need to increment previewKey
     setLoadedTag(modifiedTag);
     setIsAdReady(false);
-    setPreviewKey((k) => k + 1);
   }, []);
+
+  // Handle sample tag selection from sample browser
+  const handleSelectSampleTag = useCallback((tag: string, tagWidth: number, tagHeight: number) => {
+    // Set size first
+    setWidth(tagWidth);
+    setHeight(tagHeight);
+
+    // Auto-detect if tag is expandable and get expanded dimensions
+    if (isExpandableTag(tag)) {
+      console.log("[Page] Sample tag is expandable, switching format");
+      setFormatType("expandable");
+
+      const detectedSize = detectExpandedSize(tag);
+      if (detectedSize) {
+        console.log("[Page] Auto-detected expanded size from sample:", detectedSize);
+        setExpandedWidth(detectedSize.width);
+        setExpandedHeight(detectedSize.height);
+      }
+    } else {
+      // Reset to banner format for non-expandable samples
+      setFormatType("banner");
+    }
+
+    // Clear HTML5 content
+    if (html5Url) {
+      clearHtml5Ad();
+      setHtml5Url(null);
+      setHtml5EntryPoint(null);
+    }
+    // Set and load the tag
+    // Note: Don't increment previewKey here - that's only for reloading the same tag
+    // The tag change itself will trigger the PreviewFrame effect
+    setTagValue(tag);
+    setLoadedTag(tag);
+    setInputMode("tag");
+    setIsAdReady(false);
+  }, [html5Url]);
+
+  // Handle sample bundle selection from sample browser
+  const handleSelectSampleBundle = useCallback(async (path: string, bundleWidth: number, bundleHeight: number) => {
+    if (!swReady) {
+      console.error("Service worker not ready");
+      return;
+    }
+
+    try {
+      // Fetch the bundle
+      const response = await fetch(`/${path}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch bundle: ${response.statusText}`);
+      }
+      const blob = await response.blob();
+
+      // Import the zip loader dynamically to avoid circular deps
+      const { extractZip } = await import("@/lib/html5/zip-loader");
+      // Create a File object from the blob
+      const file = new File([blob], "sample.zip", { type: "application/zip" });
+      const result = await extractZip(file);
+
+      // Set size
+      setWidth(bundleWidth);
+      setHeight(bundleHeight);
+
+      // Clear tag content
+      setLoadedTag(null);
+      setTagValue("");
+      setInputMode("html5");
+
+      // Load into service worker
+      await loadHtml5Ad(result.files, { width: bundleWidth, height: bundleHeight });
+
+      // Set preview URL
+      const url = getPreviewUrl(result.entryPoint);
+      setHtml5EntryPoint(result.entryPoint);
+      setHtml5Url(url);
+      setIsAdReady(false);
+      setPreviewKey((k) => k + 1);
+    } catch (error) {
+      console.error("Failed to load sample bundle:", error);
+    }
+  }, [swReady]);
 
   // Handle text modifications reload - stores mods and reloads
   const handleTextReloadWithChanges = useCallback(() => {
@@ -372,6 +549,15 @@ export default function Home() {
     }
     // Auto-scan for DCO text elements
     scanAd();
+
+    // Update compliance timing
+    setComplianceData((prev) => ({
+      ...prev,
+      timing: {
+        ...prev.timing,
+        mraidReady: Date.now(),
+      },
+    }));
   }, [scanAd, html5Url, loadedTag, width, height]);
 
   const handleResize = useCallback((newWidth: number, newHeight: number) => {
@@ -386,6 +572,38 @@ export default function Home() {
       replaceMacroInDOM(iframe, macro, value);
     }
   }, []);
+
+  // Run compliance checks
+  const handleRunCompliance = useCallback(() => {
+    // Get source content from iframe for security/click scanning
+    const iframe = previewFrameRef.current?.getIframe();
+    let sourceContent: string | undefined;
+    try {
+      sourceContent = iframe?.contentDocument?.documentElement?.outerHTML;
+    } catch {
+      // Cross-origin, can't access
+    }
+
+    const dataWithSource: ComplianceData = {
+      ...complianceData,
+      sourceContent,
+    };
+
+    complianceEngineRef.current.setDSP(selectedDSP);
+    const result = complianceEngineRef.current.runChecks(dataWithSource);
+    setComplianceResult(result);
+  }, [complianceData, selectedDSP]);
+
+  // Handle DSP change
+  const handleDSPChange = useCallback((dsp: string) => {
+    setSelectedDSP(dsp);
+    // Re-run checks with new DSP rules if we have a result
+    if (complianceResult) {
+      complianceEngineRef.current.setDSP(dsp);
+      const result = complianceEngineRef.current.runChecks(complianceResult.data);
+      setComplianceResult(result);
+    }
+  }, [complianceResult]);
 
   const handleScreenshot = useCallback(async () => {
     const container = previewFrameRef.current?.getContainer();
@@ -807,8 +1025,8 @@ export default function Home() {
             <div className="w-[380px] shrink-0 space-y-2 overflow-y-auto">
 
               {/* Tag Input */}
-              <Card className={`transition-all duration-300 ${highlightedSection === "content" ? "ring-2 ring-cyan-500/50 shadow-lg shadow-cyan-500/20" : ""}`}>
-                <CardHeader className="pb-1 pt-2 px-3">
+              <Card className={`py-2 gap-1 transition-all duration-300 ${highlightedSection === "content" ? "ring-2 ring-cyan-500/50 shadow-lg shadow-cyan-500/20" : ""}`}>
+                <CardHeader className="py-1 px-3">
                   <CardTitle className="text-[10px] font-mono font-normal text-cyan-400/70 uppercase tracking-widest leading-none">Ad Content</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0 px-3 pb-3">
@@ -819,14 +1037,16 @@ export default function Home() {
                     onHtml5Load={handleHtml5Load}
                     inputMode={inputMode}
                     onInputModeChange={setInputMode}
+                    onSelectSampleTag={handleSelectSampleTag}
+                    onSelectSampleBundle={handleSelectSampleBundle}
                     disabled={false}
                   />
                 </CardContent>
               </Card>
 
               {/* Size Controls */}
-              <Card className={`transition-all duration-300 ${highlightedSection === "size" ? "ring-2 ring-purple-500/50 shadow-lg shadow-purple-500/20" : ""}`}>
-                <CardHeader className="pb-1 pt-2 px-3">
+              <Card className={`py-2 gap-1 transition-all duration-300 ${highlightedSection === "size" ? "ring-2 ring-purple-500/50 shadow-lg shadow-purple-500/20" : ""}`}>
+                <CardHeader className="py-1 px-3">
                   <CardTitle className="text-[10px] font-mono font-normal text-purple-400/70 uppercase tracking-widest leading-none">Size</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0 px-3 pb-3">
@@ -835,6 +1055,12 @@ export default function Home() {
                     height={height}
                     onWidthChange={setWidth}
                     onHeightChange={setHeight}
+                    expandedWidth={expandedWidth}
+                    expandedHeight={expandedHeight}
+                    onExpandedWidthChange={setExpandedWidth}
+                    onExpandedHeightChange={setExpandedHeight}
+                    formatType={formatType}
+                    onFormatTypeChange={setFormatType}
                     batchSizes={batchSizes}
                     onBatchSizesChange={setBatchSizes}
                   />
@@ -842,8 +1068,8 @@ export default function Home() {
               </Card>
 
               {/* Preview Settings */}
-              <Card className={`transition-all duration-300 ${highlightedSection === "display" ? "ring-2 ring-orange-500/50 shadow-lg shadow-orange-500/20" : ""}`}>
-                <CardHeader className="pb-1 pt-2 px-3">
+              <Card className={`py-2 gap-1 transition-all duration-300 ${highlightedSection === "display" ? "ring-2 ring-orange-500/50 shadow-lg shadow-orange-500/20" : ""}`}>
+                <CardHeader className="py-1 px-3">
                   <CardTitle className="text-[10px] font-mono font-normal text-orange-400/70 uppercase tracking-widest leading-none">Display</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0 px-3 pb-3 space-y-3">
@@ -897,6 +1123,11 @@ export default function Home() {
                 html5Macros={html5Macros}
                 onMacroReplaceInDOM={handleMacroReplaceInDOM}
                 isHtml5={!!html5Url}
+                complianceResult={complianceResult}
+                onRunCompliance={handleRunCompliance}
+                selectedDSP={selectedDSP}
+                onDSPChange={handleDSPChange}
+                hasContent={!!(loadedTag || html5Url)}
               />
             </div>
           </div>
@@ -976,6 +1207,11 @@ export default function Home() {
                   onResize={handleResize}
                   suppressOverflowWarning={isStartingCapture || recorder.state.isRecording || recorder.state.isProcessing || isCapturing}
                   countdown={countdown}
+                  formatType={formatType}
+                  expandedWidth={expandedWidth}
+                  expandedHeight={expandedHeight}
+                  isExpanded={isExpanded}
+                  onExpandChange={setIsExpanded}
                 />
               </div>
             </CardContent>

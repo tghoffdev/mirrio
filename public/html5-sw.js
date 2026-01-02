@@ -21,9 +21,18 @@ self.addEventListener('message', (event) => {
 
   if (type === 'LOAD_HTML5') {
     fileCache.clear();
+    const loadStart = Date.now();
+    let complianceFiles = [];
+
     if (files) {
       Object.entries(files).forEach(([path, data]) => {
         fileCache.set(path, data);
+        // Collect file info for compliance
+        complianceFiles.push({
+          path: path,
+          size: data.content ? data.content.length : 0,
+          contentType: data.contentType || 'application/octet-stream'
+        });
       });
       console.log('[HTML5 SW] Loaded', fileCache.size, 'files:', Array.from(fileCache.keys()));
     }
@@ -35,12 +44,31 @@ self.addEventListener('message', (event) => {
     if (event.source) {
       console.log('[HTML5 SW] Responding to message source');
       event.source.postMessage({ type: 'HTML5_READY' });
+      // Send compliance file data
+      if (complianceFiles.length > 0) {
+        event.source.postMessage({
+          type: 'compliance-files',
+          files: complianceFiles,
+          totalSize: complianceFiles.reduce((sum, f) => sum + f.size, 0),
+          loadStart: loadStart
+        });
+        console.log('[HTML5 SW] Sent compliance data for', complianceFiles.length, 'files');
+      }
     } else {
       // Fallback: Notify all clients
       self.clients.matchAll({ includeUncontrolled: true }).then(clients => {
         console.log('[HTML5 SW] Notifying', clients.length, 'clients (fallback)');
         clients.forEach(client => {
           client.postMessage({ type: 'HTML5_READY' });
+          // Send compliance file data
+          if (complianceFiles.length > 0) {
+            client.postMessage({
+              type: 'compliance-files',
+              files: complianceFiles,
+              totalSize: complianceFiles.reduce((sum, f) => sum + f.size, 0),
+              loadStart: loadStart
+            });
+          }
         });
       });
     }

@@ -193,12 +193,18 @@ export function generateMRAIDBridge(options: MRAIDBridgeOptions): string {
       // Don't actually open - just notify parent for capture tool
     },
     close: function() {
-      mraid._notifyParent('close');
-      // No-op - can't close the preview
+      if (state === 'expanded') {
+        state = 'default';
+        mraid._fireEvent('stateChange', 'default');
+        mraid._notifyParent('close');
+      }
     },
     expand: function(url) {
-      mraid._notifyParent('expand', [url]);
-      // Don't actually expand - just notify parent for capture tool
+      if (state === 'default') {
+        state = 'expanded';
+        mraid._fireEvent('stateChange', 'expanded');
+        mraid._notifyParent('expand', [url]);
+      }
     },
     resize: function() {
       mraid._notifyParent('resize');
