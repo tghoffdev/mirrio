@@ -140,7 +140,6 @@ export async function generateProofPack(
         name: m.name,
         format: m.format,
         raw: m.raw,
-        description: m.description,
         count: m.count,
       })),
       null,
