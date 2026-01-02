@@ -103,27 +103,29 @@ export function AuditPanel({
   const [baseTag, setBaseTag] = useState(tag);
   const [macroValues, setMacroValues] = useState<Record<string, string>>({});
 
-  // Stabilize html5Macros to prevent re-renders when reference changes but content is same
-  const html5MacrosKeyRef = useRef<string>("");
-  const stableHtml5MacrosRef = useRef<DetectedMacro[]>([]);
+  // Track the "base macros" - the original macros before any values were applied
+  // This prevents macros from disappearing when reloaded with values
+  const [baseMacros, setBaseMacros] = useState<DetectedMacro[]>([]);
+  const prevHtml5MacrosLengthRef = useRef(0);
 
-  // Create a key from macro names to detect actual changes
-  const html5MacrosKey = useMemo(() => {
-    return html5Macros.map(m => `${m.format}:${m.name}:${m.raw}`).join("|");
-  }, [html5Macros]);
+  // Update base macros only when we get MORE macros (new content loaded)
+  // or when macros change from empty to non-empty (initial load)
+  // Don't update when macros decrease (which happens after reload with values)
+  useEffect(() => {
+    if (html5Macros.length > 0) {
+      // If we have more macros than before, or base is empty, update base
+      if (html5Macros.length >= baseMacros.length || baseMacros.length === 0) {
+        setBaseMacros(html5Macros);
+      }
+    }
+    prevHtml5MacrosLengthRef.current = html5Macros.length;
+  }, [html5Macros, baseMacros.length]);
 
-  // Only update the stable ref when content actually changes
-  if (html5MacrosKey !== html5MacrosKeyRef.current) {
-    html5MacrosKeyRef.current = html5MacrosKey;
-    stableHtml5MacrosRef.current = html5Macros;
-  }
-
-  // Detect macros - only from HTML5 scanned content (skip tag-based detection to avoid false positives)
+  // Detect macros - use base macros to persist through reloads
   const detectedMacros = useMemo(() => {
-    // Only use HTML5 scanned macros - tag-based detection causes too many false positives
-    // with vendor tags (Celtra, DCM, etc.) that have query params like &name=
-    return stableHtml5MacrosRef.current.sort((a, b) => a.name.localeCompare(b.name));
-  }, [html5MacrosKey]);
+    // Use baseMacros which persists even after reload with values
+    return baseMacros.sort((a, b) => a.name.localeCompare(b.name));
+  }, [baseMacros]);
 
   // Ref to access macroValues without adding to effect dependencies
   const macroValuesRef = useRef(macroValues);
@@ -167,6 +169,7 @@ export function AuditPanel({
     if (isNewTag) {
       setBaseTag(tag);
       setMacroValues({});
+      setBaseMacros([]); // Clear base macros for new content
       setLastTextModifiedTag(null);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
