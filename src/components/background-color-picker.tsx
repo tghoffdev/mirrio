@@ -42,23 +42,24 @@ export function BackgroundColorPicker({
 
       {/* Custom color input */}
       <div className="flex gap-2 items-center">
-        <div
-          className="w-8 h-8 rounded border border-border flex-shrink-0"
-          style={{ backgroundColor: value }}
-        />
         <Input
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="#000000"
-          className="font-mono text-sm h-8"
+          className="font-mono text-sm h-8 flex-1"
         />
-        <input
-          type="color"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-8 h-8 rounded cursor-pointer border-0 p-0"
-        />
+        <label
+          className="w-8 h-8 rounded border border-border flex-shrink-0 cursor-pointer relative overflow-hidden"
+          style={{ backgroundColor: value }}
+        >
+          <input
+            type="color"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+          />
+        </label>
       </div>
     </div>
   );

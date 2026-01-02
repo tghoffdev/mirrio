@@ -1625,10 +1625,6 @@ export default function Home() {
                   <div>
                     <label className="text-xs text-muted-foreground mb-1.5 block">Border</label>
                     <div className="flex gap-2 items-center">
-                      <div
-                        className="w-8 h-8 rounded border border-border flex-shrink-0"
-                        style={{ backgroundColor: borderColor }}
-                      />
                       <input
                         type="text"
                         value={borderColor}
@@ -1636,12 +1632,17 @@ export default function Home() {
                         placeholder="#27272a"
                         className="flex-1 h-8 px-2 font-mono text-sm bg-background border border-input rounded-md"
                       />
-                      <input
-                        type="color"
-                        value={borderColor}
-                        onChange={(e) => setBorderColor(e.target.value)}
-                        className="w-8 h-8 rounded cursor-pointer border-0 p-0"
-                      />
+                      <label
+                        className="w-8 h-8 rounded border border-border flex-shrink-0 cursor-pointer relative overflow-hidden"
+                        style={{ backgroundColor: borderColor }}
+                      >
+                        <input
+                          type="color"
+                          value={borderColor}
+                          onChange={(e) => setBorderColor(e.target.value)}
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                        />
+                      </label>
                     </div>
                   </div>
                 </CardContent>
