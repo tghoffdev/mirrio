@@ -1706,8 +1706,6 @@ export default function Home() {
                       onSelectSampleTag={handleSelectSampleTag}
                       onSelectSampleBundle={handleSelectSampleBundle}
                       disabled={false}
-                      isBulkMode={isBulkMode}
-                      onBulkModeChange={setIsBulkMode}
                     />
                   )}
                 </CardContent>
